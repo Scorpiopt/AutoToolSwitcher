@@ -11,6 +11,20 @@ using Verse.Sound;
 
 namespace AutoToolSwitcher
 {
+    public class SkillJob
+    {
+        public SkillJob(SkillDef skill)
+        {
+            this.skill = skill;
+        }
+        public SkillJob(JobDef jobDef)
+        {
+            this.jobDef = jobDef;
+        }
+
+        public SkillDef skill;
+        public JobDef jobDef;
+    }
     public enum ToolAction
     {
         DoNothing,
@@ -22,6 +36,40 @@ namespace AutoToolSwitcher
     public static class ToolSearchUtility
     {
         public static HashSet<ThingDef> toolDefs = new HashSet<ThingDef>();
+
+        public static HashSet<string> fireExtinguisherDefnames = new HashSet<string>()
+        {
+            "VWE_Gun_FireExtinguisher",
+        };
+        public static HashSet<ThingDef> fireExtinguishers = new HashSet<ThingDef>();
+
+        private static Func<Pawn, Thing, bool> toolValidator = delegate (Pawn p, Thing x)
+        {
+            if (!toolDefs.Contains(x.def))
+            {
+                return false;
+            }
+            if (!p.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Deadly))
+            {
+                return false;
+            }
+            return true;
+        };
+
+
+        private static Func<Pawn, Thing, bool> fireExtinguisherValidator = delegate (Pawn p, Thing x)
+        {
+            if (!fireExtinguishers.Contains(x.def))
+            {
+                return false;
+            }
+            if (!p.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Deadly))
+            {
+                return false;
+            }
+            return true;
+        };
+
         static ToolSearchUtility()
         {
             foreach (var thingDef in DefDatabase<ThingDef>.AllDefs)
@@ -38,26 +86,58 @@ namespace AutoToolSwitcher
                     }
                 }
             }
+            foreach (var defName in fireExtinguisherDefnames)
+            {
+                var tool = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
+                if (tool != null)
+                {
+                    fireExtinguishers.Add(tool);
+                }
+            }
         }
-
-        public static ThingWithComps FindToolFor(Pawn pawn, SkillDef skill, out ToolAction toolAction)
+        public static ThingWithComps FindToolFor(Pawn pawn, Job job, out ToolAction toolAction)
         {
             toolAction = ToolAction.DoNothing;
-            var equippedThings = pawn.equipment?.AllEquipmentListForReading.Where(x => toolValidator(x));
-            var inventoryThings = pawn.inventory?.innerContainer.OfType<ThingWithComps>().Where(x => toolValidator(x));
+            Log.Message("FindToolFor: " + job.def);
+            if (job.def == ATS_DefOf.ATS_BeatFireAdv)
+            {
+                return FindToolForInt(pawn, new SkillJob(job.def), fireExtinguisherValidator, fireExtinguishers, out toolAction);
+            }
+            return null;
+        }
+
+        public static ThingWithComps FindToolFor(Pawn pawn, SkillDef skillDef, out ToolAction toolAction)
+        {
+            return FindToolForInt(pawn, new SkillJob(skillDef), toolValidator, toolDefs, out toolAction);
+        }
+        private static ThingWithComps FindToolForInt(Pawn pawn, SkillJob skillJob, Func<Pawn, Thing, bool> validator, HashSet<ThingDef> toolThingDefs, out ToolAction toolAction)
+        {
+            toolAction = ToolAction.DoNothing;
+            var equippedThings = pawn.equipment?.AllEquipmentListForReading.Where(x => validator(pawn, x));
+            var inventoryThings = pawn.inventory?.innerContainer.OfType<ThingWithComps>().Where(x => validator(pawn, x));
             var outsideThings = new List<ThingWithComps>();
-            foreach (var def in toolDefs)
+            foreach (var def in toolThingDefs)
             {
                 foreach (var tool in pawn.Map.listerThings.ThingsOfDef(def).OfType<ThingWithComps>())
                 {
-                    outsideThings.Add(tool);
+                    if (validator(pawn, tool))
+                    {
+                        Log.Message("Adding tool " + tool);
+                        outsideThings.Add(tool);
+                    }
                 }
             }
 
-            var equippedThingsScored = GetToolsScoredFor(equippedThings, skill);
-            var inventoryThingsScored = GetToolsScoredFor(inventoryThings, skill);
-            var outsideThingsScored = GetToolsScoredFor(outsideThings, skill);
+            var equippedThingsScored = GetToolsScoredFor(equippedThings, skillJob);
+            var inventoryThingsScored = GetToolsScoredFor(inventoryThings, skillJob);
+            var outsideThingsScored = GetToolsScoredFor(outsideThings, skillJob);
+            return GetScoredTool(pawn, equippedThingsScored, inventoryThingsScored, outsideThingsScored, out toolAction);
+        }
 
+        private static ThingWithComps GetScoredTool(Pawn pawn, Dictionary<float, List<ThingWithComps>> equippedThingsScored, Dictionary<float, List<ThingWithComps>> inventoryThingsScored, 
+            Dictionary<float, List<ThingWithComps>> outsideThingsScored, out ToolAction toolAction)
+        {
+            toolAction = ToolAction.DoNothing;
             while (true)
             {
                 if ((!equippedThingsScored?.Any() ?? false) && (!inventoryThingsScored?.Any() ?? false) && (!outsideThingsScored?.Any() ?? false))
@@ -81,7 +161,6 @@ namespace AutoToolSwitcher
                     {
                         var tool = inventoryThingsScored[inventoryMaxScore.Value].RandomElement();
                         toolAction = ToolAction.EquipFromInventory;
-                        Log.Message("Found " + tool + " for " + skill + " - score: " + inventoryMaxScore.Value);
                         return tool;
                     }
                     else if (outsideMaxScore.HasValue && (!equippedMaxScore.HasValue || outsideMaxScore.Value > equippedMaxScore)
@@ -93,7 +172,6 @@ namespace AutoToolSwitcher
                         if (tool != null)
                         {
                             toolAction = ToolAction.GoAndEquipTool;
-                            Log.Message("Found " + tool + " for " + skill + " - score: " + outsideMaxScore.Value);
                             return tool;
                         }
                         else
@@ -106,29 +184,20 @@ namespace AutoToolSwitcher
             return null;
         }
 
-        private static Predicate<Thing> toolValidator = delegate (Thing x)
-        {
-            if (toolDefs.Contains(x.def))
-            {
-                return true;
-            }
-            return false;
-        };
-
-        private static Dictionary<float, List<ThingWithComps>> GetToolsScoredFor(IEnumerable<ThingWithComps> things, SkillDef skillDef)
+        private static Dictionary<float, List<ThingWithComps>> GetToolsScoredFor(IEnumerable<ThingWithComps> things, SkillJob skillJob)
         {
             if (things.Any())
             {
-                return GetScoredThings(things, skillDef);
+                return GetScoredThings(things, skillJob);
             }
             return null;
         }
-        private static Dictionary<float, List<ThingWithComps>> GetScoredThings(IEnumerable<ThingWithComps> things, SkillDef skillDef)
+        private static Dictionary<float, List<ThingWithComps>> GetScoredThings(IEnumerable<ThingWithComps> things, SkillJob skillJob)
         {
             Dictionary<float, List<ThingWithComps>> toolsByScores = new Dictionary<float, List<ThingWithComps>>();
             foreach (var thing in things)
             {
-                if (thing.TryGetScore(skillDef, out var score))
+                if (thing.TryGetScore(skillJob, out var score))
                 {
                     if (toolsByScores.TryGetValue(score, out var toolList))
                     {
@@ -142,22 +211,31 @@ namespace AutoToolSwitcher
             }
             return toolsByScores;
         }
-        private static bool TryGetScore(this ThingWithComps thing, SkillDef skill, out float result)
+        public static bool TryGetScore(this ThingWithComps thing, SkillJob skillJob, out float result)
         {
-            bool affectsSkill = false;
+            bool isUseful = false;
             result = 0;
-            if (thing.def.equippedStatOffsets != null)
+            if (skillJob.skill != null)
             {
-                foreach (var stat in thing.def.equippedStatOffsets)
+                if (thing.def.equippedStatOffsets != null)
                 {
-                    if (stat.AffectsSkill(skill))
+                    foreach (var stat in thing.def.equippedStatOffsets)
                     {
-                        affectsSkill = true;
-                        result += stat.value;
+                        if (stat.AffectsSkill(skillJob.skill))
+                        {
+                            isUseful = true;
+                            result += stat.value;
+                        }
                     }
                 }
             }
-            return affectsSkill;
+            else if (skillJob.jobDef != null)
+            {
+                Log.Message(thing + "Scoring for job " + skillJob.jobDef);
+                result += 1f; // we sorted out tools already
+                isUseful = true;
+            }
+            return isUseful;
         }
 
         private static bool AffectsSkill(this StatModifier statModifier, SkillDef skill)

@@ -94,6 +94,10 @@ namespace AutoToolSwitcher
 				{
 					return false;
 				}
+				if (ToolSearchUtility.fireExtinguishers.Contains(t.def))
+                {
+					return false;
+                }
 				return true;
 			};
 
