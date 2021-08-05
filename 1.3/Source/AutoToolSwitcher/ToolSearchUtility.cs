@@ -97,13 +97,7 @@ namespace AutoToolSwitcher
         }
         public static ThingWithComps FindToolFor(Pawn pawn, Job job, out ToolAction toolAction)
         {
-            toolAction = ToolAction.DoNothing;
-            Log.Message("FindToolFor: " + job.def);
-            if (job.def == ATS_DefOf.ATS_BeatFireAdv)
-            {
-                return FindToolForInt(pawn, new SkillJob(job.def), fireExtinguisherValidator, fireExtinguishers, out toolAction);
-            }
-            return null;
+            return FindToolForInt(pawn, new SkillJob(job.def), fireExtinguisherValidator, fireExtinguishers, out toolAction);
         }
 
         public static ThingWithComps FindToolFor(Pawn pawn, SkillDef skillDef, out ToolAction toolAction)
@@ -122,12 +116,10 @@ namespace AutoToolSwitcher
                 {
                     if (validator(pawn, tool))
                     {
-                        Log.Message("Adding tool " + tool);
                         outsideThings.Add(tool);
                     }
                 }
             }
-
             var equippedThingsScored = GetToolsScoredFor(equippedThings, skillJob);
             var inventoryThingsScored = GetToolsScoredFor(inventoryThings, skillJob);
             var outsideThingsScored = GetToolsScoredFor(outsideThings, skillJob);
@@ -150,18 +142,16 @@ namespace AutoToolSwitcher
                     var inventoryMaxScore = (inventoryThingsScored != null && inventoryThingsScored.Any()) ? inventoryThingsScored?.MaxBy(x => x.Key).Key : null;
                     var outsideMaxScore = (outsideThingsScored != null && outsideThingsScored.Any()) ? outsideThingsScored?.MaxBy(x => x.Key).Key : null;
 
-                    if (!equippedMaxScore.HasValue && !inventoryMaxScore.HasValue && !outsideMaxScore.HasValue
-                        || equippedMaxScore.HasValue && (!inventoryMaxScore.HasValue || equippedMaxScore.Value >= inventoryMaxScore.Value)
+                    if (equippedMaxScore.HasValue && (!inventoryMaxScore.HasValue || equippedMaxScore.Value >= inventoryMaxScore.Value)
                         && (!outsideMaxScore.HasValue || equippedMaxScore.Value >= outsideMaxScore))
                     {
-                        break;
+                        return equippedThingsScored.RandomElement().Value.RandomElement();
                     }
                     else if (inventoryMaxScore.HasValue && (!equippedMaxScore.HasValue || inventoryMaxScore.Value > equippedMaxScore.Value)
                         && (!outsideMaxScore.HasValue || inventoryMaxScore.Value >= outsideMaxScore.Value))
                     {
-                        var tool = inventoryThingsScored[inventoryMaxScore.Value].RandomElement();
                         toolAction = ToolAction.EquipFromInventory;
-                        return tool;
+                        return inventoryThingsScored[inventoryMaxScore.Value].RandomElement();
                     }
                     else if (outsideMaxScore.HasValue && (!equippedMaxScore.HasValue || outsideMaxScore.Value > equippedMaxScore)
                         && (!inventoryMaxScore.HasValue || outsideMaxScore.Value > inventoryMaxScore.Value))
@@ -178,6 +168,10 @@ namespace AutoToolSwitcher
                         {
                             outsideThingsScored.Remove(outsideMaxScore.Value);
                         }
+                    }
+                    else if (!equippedMaxScore.HasValue && !inventoryMaxScore.HasValue && !outsideMaxScore.HasValue)
+                    {
+                        return null;
                     }
                 }
             }
@@ -229,12 +223,16 @@ namespace AutoToolSwitcher
                     }
                 }
             }
-            else if (skillJob.jobDef != null)
+            else if (skillJob.jobDef != null) // maybe we should add scores for tools here
             {
-                Log.Message(thing + "Scoring for job " + skillJob.jobDef);
-                result += 1f; // we sorted out tools already
-                isUseful = true;
+                if (skillJob.jobDef == ATS_DefOf.ATS_BeatFireAdv && fireExtinguishers.Contains(thing.def))
+                {
+                    result += 1f;
+                    isUseful = true;
+                }
             }
+            Log.Message(thing + " affects " + skillJob.skill + " - " + skillJob.jobDef + " - " + isUseful + " - " + result);
+
             return isUseful;
         }
 
@@ -265,7 +263,7 @@ namespace AutoToolSwitcher
             return false;
         }
 
-        public static SkillDef GetActiveSkill(List<Toil> toils)
+        public static SkillDef GetActiveSkill(Job job, List<Toil> toils)
         {
             foreach (var toil in toils)
             {
@@ -280,6 +278,13 @@ namespace AutoToolSwitcher
                         }
                     }
                     catch { };
+                }
+            }
+            if (job != null)
+            {
+                if (job.def == JobDefOf.FinishFrame)
+                {
+                    return SkillDefOf.Construction;
                 }
             }
             return null;
