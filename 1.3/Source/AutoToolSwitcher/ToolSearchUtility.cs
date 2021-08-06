@@ -215,6 +215,7 @@ namespace AutoToolSwitcher
                 {
                     foreach (var stat in thing.def.equippedStatOffsets)
                     {
+                        Log.Message("Stat: " + stat + " - " + skillJob.skill + " - " + stat.AffectsSkill(skillJob.skill));
                         if (stat.AffectsSkill(skillJob.skill))
                         {
                             isUseful = true;
@@ -231,6 +232,7 @@ namespace AutoToolSwitcher
                     isUseful = true;
                 }
             }
+
             Log.Message(thing + " affects " + skillJob.skill + " - " + skillJob.jobDef + " - " + isUseful + " - " + result);
 
             return isUseful;
@@ -263,6 +265,13 @@ namespace AutoToolSwitcher
             return false;
         }
 
+        public static SkillDef GetActiveSkill(this Job job, Pawn pawn)
+        {
+            var driver = pawn.jobs.curDriver;
+            var toils = Traverse.Create(driver).Field("toils").GetValue<List<Toil>>();
+            return GetActiveSkill(job, toils);
+        }
+
         public static SkillDef GetActiveSkill(Job job, List<Toil> toils)
         {
             foreach (var toil in toils)
@@ -277,9 +286,13 @@ namespace AutoToolSwitcher
                             return skill;
                         }
                     }
-                    catch { };
+                    catch (Exception ex)
+                    {
+
+                    };
                 }
             }
+
             if (job != null)
             {
                 if (job.def == JobDefOf.FinishFrame)

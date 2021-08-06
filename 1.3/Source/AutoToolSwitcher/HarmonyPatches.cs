@@ -65,7 +65,7 @@ namespace AutoToolSwitcher
                 return;
             }
 
-            if (ToolSearchUtility.fireExtinguishers.Contains(__instance.equipment?.PrimaryEq?.parent?.def))
+            if (__instance.IsUsingTool())
             {
                 __result = false;
             }
@@ -220,6 +220,10 @@ namespace AutoToolSwitcher
                 {
                     ToolAction toolAction;
                     var tool = skill != null ? ToolSearchUtility.FindToolFor(pawn, skill, out toolAction) : ToolSearchUtility.FindToolFor(pawn, pawn.CurJob, out toolAction);
+                    if (tool is null)
+                    {
+                        Log.Message("1 Null: " + pawn.CurJob + " - " + tool);
+                    }
                     cachedToolsByJobs[pawn.CurJob] = tool; // we do that so we retrieve this tool later rather than finding it again
                     if (tool != null)
                     {
@@ -327,9 +331,24 @@ namespace AutoToolSwitcher
                 {
                     tool.def.soundInteract.PlayOneShot(new TargetInfo(pawn.Position, pawn.Map));
                 }
-                if (pawn.CurJob != null && cachedToolsByJobs.ContainsKey(pawn.CurJob))
+                var job = pawn.CurJob;
+                if (job != null)
                 {
-                    cachedToolsByJobs.Remove(pawn.CurJob); // we clear this to recheck it later
+                    var activeSkill = ToolSearchUtility.GetActiveSkill(job, pawn);
+                    Log.Message("Active skill: " + activeSkill + " - " + job + " pawn: " + pawn);
+                    if (activeSkill != null && tool.TryGetScore(new SkillJob(activeSkill), out var result) && result != 0)
+                    {
+                        cachedToolsByJobs[job] = tool;
+                    }
+                    else if (tool.TryGetScore(new SkillJob(job.def), out var result2) && result2 != 0)
+                    {
+                        cachedToolsByJobs[job] = tool;
+                    }
+                    else
+                    {
+                        Log.Message("2 Null: " + job + " - " + tool);
+                        cachedToolsByJobs[job] = null;
+                    }
                 }
             }
             else
@@ -346,9 +365,7 @@ namespace AutoToolSwitcher
             {
                 if (!cachedToolsByJobs.TryGetValue(job, out var toolUsed))
                 {
-                    var driver = job.GetCachedDriver(pawn);
-                    var toils = Traverse.Create(driver).Field("toils").GetValue<List<Toil>>();
-                    var activeSkill = ToolSearchUtility.GetActiveSkill(job, toils);
+                    var activeSkill = ToolSearchUtility.GetActiveSkill(job, pawn);
                     if (activeSkill != null && eq.TryGetScore(new SkillJob(activeSkill), out var result) && result != 0)
                     {
                         cachedToolsByJobs[job] = toolUsed = eq;
@@ -359,12 +376,16 @@ namespace AutoToolSwitcher
                     }
                     else
                     {
+                        Log.Message("3 Null: " + job + " - " + toolUsed);
                         cachedToolsByJobs[job] = toolUsed = null;
                     }
                 }
+                Log.Message(pawn + " - " + toolUsed + " - " + pawn.equipment.Primary);
                 return toolUsed == pawn.equipment.Primary;
             }
             return false;
         }
+
+
     }
 }
