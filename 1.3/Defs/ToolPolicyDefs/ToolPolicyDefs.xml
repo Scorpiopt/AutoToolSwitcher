@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <AutoToolSwitcher.ToolPolicyDef>
+    <defName>ATS_Unrestricted</defName>
+    <label>unrestricted</label>
+  </AutoToolSwitcher.ToolPolicyDef>
+
+  <AutoToolSwitcher.ToolPolicyDef>
+    <defName>ATS_NoTools</defName>
+    <label>no tools</label>
+  </AutoToolSwitcher.ToolPolicyDef>
+
+  <PawnColumnDef>
+    <defName>ATS_ToolPolicy</defName>
+    <label>tool policy</label>
+    <workerClass>AutoToolSwitcher.PawnColumnWorker_ToolPolicy</workerClass>
+    <sortable>true</sortable>
+  </PawnColumnDef>
+</Defs>

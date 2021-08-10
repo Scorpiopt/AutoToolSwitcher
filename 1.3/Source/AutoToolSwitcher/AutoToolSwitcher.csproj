@@ -41,6 +41,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PawnColumnWorker_ToolPolicy.cs" />
+    <Compile Include="Pawn_ToolPolicyTracker.cs" />
+    <Compile Include="GameComponent_ToolTracker.cs" />
+    <Compile Include="Dialog_ManageToolPolicies.cs" />
+    <Compile Include="ToolPolicyUIUtility.cs" />
+    <Compile Include="ToolPolicyUtils.cs" />
+    <Compile Include="ToolPolicyDef.cs" />
+    <Compile Include="ToolPolicyEntry.cs" />
+    <Compile Include="ToolPolicy.cs" />
+    <Compile Include="ToolPolicyDatabase.cs" />
     <Compile Include="ToolSearchUtility.cs" />
     <Compile Include="JobDriver_BeatFireAdv.cs" />
     <Compile Include="WeaponSearchUtility.cs" />

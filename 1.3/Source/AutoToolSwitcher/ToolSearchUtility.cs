@@ -49,6 +49,12 @@ namespace AutoToolSwitcher
             {
                 return false;
             }
+            var policy = p.GetCurrentToolPolicy();
+            if (policy != null && !policy[x.def].takeAsTool)
+            {
+                Log.Message(policy + " prevents from taking " + x.def + " as tool");
+                return false;
+            }
             if (!p.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Deadly))
             {
                 return false;
@@ -56,11 +62,21 @@ namespace AutoToolSwitcher
             return true;
         };
 
+        public static bool IsTool(this ThingDef thingDef)
+        {
+            return toolDefs.Contains(thingDef) || fireExtinguishers.Contains(thingDef);
+        }
 
         private static Func<Pawn, Thing, bool> fireExtinguisherValidator = delegate (Pawn p, Thing x)
         {
             if (!fireExtinguishers.Contains(x.def))
             {
+                return false;
+            }
+            var policy = p.GetCurrentToolPolicy();
+            if (policy != null && !policy[x.def].takeAsTool)
+            {
+                Log.Message(policy + " prevents from taking " + x.def + " as tool");
                 return false;
             }
             if (!p.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Deadly))

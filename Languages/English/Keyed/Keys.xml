@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+	<ATS.SelectToolPolicy>Select policy...</ATS.SelectToolPolicy>
+	<ATS.NewToolPolicy>New policy</ATS.NewToolPolicy>
+	<ATS.DeleteToolPolicy>Delete policy...</ATS.DeleteToolPolicy>
+	<ATS.NoToolPolicySelected>No tool policy selected</ATS.NoToolPolicySelected>
+	<ATS.ToolColumnLabel>Tool</ATS.ToolColumnLabel>
+	<ATS.ToolUsageColumnLabel>Usage</ATS.ToolUsageColumnLabel>
+	<ATS.ManageToolPolicies>Manage tool policies</ATS.ManageToolPolicies>
+	<ATS.ToolPolicyInUse>Tool policy is in use by {0}.</ATS.ToolPolicyInUse>
+	<ATS.ToolPolicy>Tool policy</ATS.ToolPolicy>
+	<ATS.TakeToInventoryColumnDesc>An amount of the tool to pick up extra when gathering it.</ATS.TakeToInventoryColumnDesc>
+	<ATS.ToolNameColumnDesc>The name of a tool.</ATS.ToolNameColumnDesc>
+	<ATS.Equip>Equip</ATS.Equip>
+	<ATS.EquipDesc>Equip it as a main weapon.</ATS.EquipDesc>
+	<ATS.EquipAsSecondaryWeapon>Secondary weapon</ATS.EquipAsSecondaryWeapon>
+	<ATS.EquipAsSecondaryWeaponDesc>Keep in inventory as a secondary weapon.</ATS.EquipAsSecondaryWeaponDesc>
+	<ATS.TakeAsTool>Take as tool</ATS.TakeAsTool>
+	<ATS.TakeAsToolDesc>Keep in inventory as a tool.</ATS.TakeAsToolDesc>
+
+</LanguageData>

@@ -98,6 +98,23 @@ namespace AutoToolSwitcher
                 {
 					return false;
                 }
+				var policy = pawn.GetCurrentToolPolicy();
+				if (policy != null && !policy[t.def].takeAsTool)
+				{
+					Log.Message(policy + " prevents from taking " + t.def + " as primary weapon");
+					return false;
+				}
+				return true;
+			};
+
+			Predicate<Thing> secondaryWeaponValidator = delegate (Thing t)
+			{
+				var policy = pawn.GetCurrentToolPolicy();
+				if (policy != null && !policy[t.def].takeAsTool)
+				{
+					Log.Message(policy + " prevents from taking " + t.def + " as secondary weapon");
+					return false;
+				}
 				return true;
 			};
 
@@ -143,7 +160,7 @@ namespace AutoToolSwitcher
 
 			if (thing != null)
             {
-				secondaryWeapon = weaponsByScores.OrderByDescending(x => x.Value).FirstOrDefault(x => x.Key.def.IsRangedWeapon != thing.def.IsRangedWeapon).Key;
+				secondaryWeapon = weaponsByScores.OrderByDescending(x => x.Value).FirstOrDefault(x => secondaryWeaponValidator(x.Key) && x.Key.def.IsRangedWeapon != thing.def.IsRangedWeapon).Key;
 			}
 			return thing;
 		}

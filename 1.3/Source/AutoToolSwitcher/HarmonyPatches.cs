@@ -18,6 +18,7 @@ namespace AutoToolSwitcher
     public static class ATS_DefOf
     {
         public static JobDef ATS_BeatFireAdv;
+        public static ToolPolicyDef ATS_Unrestricted;
     }
 
     [StaticConstructorOnStartup]
@@ -166,6 +167,21 @@ namespace AutoToolSwitcher
             }
         }
 
+
+        [HarmonyPatch(typeof(PawnComponentsUtility), "AddAndRemoveDynamicComponents")]
+        public static class Patch_AddAndRemoveDynamicComponents
+        {
+            public static void Postfix(Pawn pawn)
+            {
+                if (pawn.Faction != null && pawn.Faction.IsPlayer && pawn.RaceProps.Humanlike)
+                {
+                    if (!GameComponent_ToolTracker.Instance.trackers.ContainsKey(pawn))
+                    {
+                        GameComponent_ToolTracker.Instance.trackers[pawn] = new Pawn_ToolPolicyTracker(pawn);
+                    }
+                }
+            }
+        }
         private static bool TryFindGunJobPrefix(ref Job __result, Pawn pawn)
         {
             if (!WeaponSearchUtility.CanLookForWeapon(pawn))
@@ -203,9 +219,13 @@ namespace AutoToolSwitcher
                     __result = JobMaker.MakeJob(JobDefOf.TakeInventory, secondaryWeapon);
                     __result.count = 1;
                 }
-
             }
-            return false;
+
+            if (__result != null)
+            {
+                return false;
+            }
+            return true;
         }
 
         private static Dictionary<Job, ThingWithComps> cachedToolsByJobs = new Dictionary<Job, ThingWithComps>();
@@ -380,7 +400,6 @@ namespace AutoToolSwitcher
                         cachedToolsByJobs[job] = toolUsed = null;
                     }
                 }
-                Log.Message(pawn + " - " + toolUsed + " - " + pawn.equipment.Primary);
                 return toolUsed == pawn.equipment.Primary;
             }
             return false;
