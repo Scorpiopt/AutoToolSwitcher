@@ -74,11 +74,20 @@ namespace AutoToolSwitcher
 		{
 			ToolPolicy toolPolicy = MakeNewToolPolicy();
 			toolPolicy.label = def.LabelCap;
-			toolPolicy.sourceDef = def;
 			if (def == ATS_DefOf.ATS_Unrestricted)
-            {
+			{
+				for (var i = 0; i < toolPolicy.Count; i++)
+                {
+					var toolPolicyEntry = toolPolicy[i];
+					toolPolicyEntry.equipAsWeapon = true;
+					toolPolicyEntry.takeAsSecondary = true;
+					if (toolPolicyEntry.tool.IsTool())
+					{
+						toolPolicyEntry.takeAsTool = true;
+					}
+				}
+			}
 
-            }
 			if (def.entries != null)
 			{
 				for (int j = 0; j < def.entries.Count; j++)

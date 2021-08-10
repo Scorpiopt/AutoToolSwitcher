@@ -90,7 +90,7 @@ namespace AutoToolSwitcher
         {
             foreach (var thingDef in DefDatabase<ThingDef>.AllDefs)
             {
-                if (thingDef.equippedStatOffsets?.Any() ?? false && thingDef.comps != null)
+                if (thingDef.equippedStatOffsets?.Any(x => x.value > 0) ?? false && thingDef.comps != null)
                 {
                     foreach (var comp in thingDef.comps)
                     {
@@ -234,7 +234,10 @@ namespace AutoToolSwitcher
                         Log.Message("Stat: " + stat + " - " + skillJob.skill + " - " + stat.AffectsSkill(skillJob.skill));
                         if (stat.AffectsSkill(skillJob.skill))
                         {
-                            isUseful = true;
+                            if (stat.value > 0)
+                            {
+                                isUseful = true;
+                            }
                             result += stat.value;
                         }
                     }
@@ -250,7 +253,6 @@ namespace AutoToolSwitcher
             }
 
             Log.Message(thing + " affects " + skillJob.skill + " - " + skillJob.jobDef + " - " + isUseful + " - " + result);
-
             return isUseful;
         }
 

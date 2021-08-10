@@ -99,7 +99,7 @@ namespace AutoToolSwitcher
 					return false;
                 }
 				var policy = pawn.GetCurrentToolPolicy();
-				if (policy != null && !policy[t.def].takeAsTool)
+				if (policy != null && !policy[t.def].equipAsWeapon)
 				{
 					Log.Message(policy + " prevents from taking " + t.def + " as primary weapon");
 					return false;
@@ -110,7 +110,7 @@ namespace AutoToolSwitcher
 			Predicate<Thing> secondaryWeaponValidator = delegate (Thing t)
 			{
 				var policy = pawn.GetCurrentToolPolicy();
-				if (policy != null && !policy[t.def].takeAsTool)
+				if (policy != null && !policy[t.def].takeAsSecondary)
 				{
 					Log.Message(policy + " prevents from taking " + t.def + " as secondary weapon");
 					return false;
