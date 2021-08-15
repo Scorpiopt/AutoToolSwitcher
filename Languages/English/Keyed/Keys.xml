@@ -12,10 +12,10 @@
 	<ATS.TakeToInventoryColumnDesc>An amount of the tool to pick up extra when gathering it.</ATS.TakeToInventoryColumnDesc>
 	<ATS.ToolNameColumnDesc>The name of a tool.</ATS.ToolNameColumnDesc>
 	<ATS.Equip>Equip</ATS.Equip>
-	<ATS.EquipDesc>Equip it as a main weapon.</ATS.EquipDesc>
+	<ATS.EquipDesc>Equip it as a main weapon. When checked on, pawns with this tool policy will go and equip it on their own.</ATS.EquipDesc>
 	<ATS.EquipAsSecondaryWeapon>Secondary weapon</ATS.EquipAsSecondaryWeapon>
-	<ATS.EquipAsSecondaryWeaponDesc>Keep in inventory as a secondary weapon.</ATS.EquipAsSecondaryWeaponDesc>
+	<ATS.EquipAsSecondaryWeaponDesc>Put in inventory as a secondary weapon. Useful when switching between weapons. If it's a melee weapon, it will be switched automatically when in a melee combat.</ATS.EquipAsSecondaryWeaponDesc>
 	<ATS.TakeAsTool>Take as tool</ATS.TakeAsTool>
-	<ATS.TakeAsToolDesc>Keep in inventory as a tool.</ATS.TakeAsToolDesc>
+	<ATS.TakeAsToolDesc>Put in inventory as a tool. It will be picked up when going to relevant jobs.</ATS.TakeAsToolDesc>
 
 </LanguageData>

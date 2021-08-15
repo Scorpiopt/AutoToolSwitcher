@@ -208,12 +208,15 @@ namespace AutoToolSwitcher
 
 			x += toolNameWidth + toolIconWidth + test3;
 			Widgets.Checkbox(x, rect.y, ref entry.takeAsTool, 24f, paintable: true);
+			TooltipHandler.TipRegion(new Rect(x, rect.y, 24, 24), "ATS.TakeAsToolDesc".Translate());
 
 			x += test;
 			Widgets.Checkbox(x, rect.y, ref entry.equipAsWeapon, 24f, paintable: true);
+			TooltipHandler.TipRegion(new Rect(x, rect.y, 24, 24), "ATS.EquipDesc".Translate());
 
 			x += test2;
 			Widgets.Checkbox(x, rect.y, ref entry.takeAsSecondary, 24f, paintable: true);
+			TooltipHandler.TipRegion(new Rect(x, rect.y, 24, 24), "ATS.EquipAsSecondaryWeaponDesc".Translate());
 
 			Text.Anchor = TextAnchor.UpperLeft;
 		}
