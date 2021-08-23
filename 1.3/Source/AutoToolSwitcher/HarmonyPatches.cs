@@ -45,10 +45,7 @@ namespace AutoToolSwitcher
                         harmony.Patch(makeNewToilsMethod, null, new HarmonyMethod(methodPostfix, priority: Priority.Last));
                     }
                 }
-                catch (Exception ex)
-                {
-
-                }
+                catch { }
             }
 
             harmony.PatchAll();
@@ -79,6 +76,7 @@ namespace AutoToolSwitcher
             {
                 public bool alwaysShowWeapon;
                 public bool neverShowWeapon;
+                public Job job;
             }
             private static void Prefix(Pawn ___pawn, out Values? __state)
             {
@@ -88,7 +86,8 @@ namespace AutoToolSwitcher
                     __state = new Values
                     {
                         neverShowWeapon = job.def.neverShowWeapon,
-                        alwaysShowWeapon = job.def.alwaysShowWeapon
+                        alwaysShowWeapon = job.def.alwaysShowWeapon,
+                        job = job,
                     };
                     job.def.neverShowWeapon = false;
                     job.def.alwaysShowWeapon = true;
@@ -99,11 +98,11 @@ namespace AutoToolSwitcher
                 }
             }
 
-            private static void Postfix(Pawn ___pawn, Values? __state)
+            private static void Postfix(Values? __state)
             {
                 if (__state.HasValue)
                 {
-                    var job = ___pawn.CurJob;
+                    var job = __state.Value.job;
                     job.def.alwaysShowWeapon = __state.Value.alwaysShowWeapon;
                     job.def.neverShowWeapon = __state.Value.neverShowWeapon;
                 }
@@ -228,11 +227,26 @@ namespace AutoToolSwitcher
             return true;
         }
 
+        private static HashSet<JobDef> ignoredJobs = new HashSet<JobDef>
+        {
+            JobDefOf.GotoWander,
+            JobDefOf.Ingest,
+            JobDefOf.LayDown,
+            JobDefOf.Wait_MaintainPosture,
+            JobDefOf.Wait,
+            JobDefOf.HaulToCell,
+            JobDefOf.TakeInventory,
+            JobDefOf.Wait_Downed,
+            JobDefOf.Wait_Wander,
+            JobDefOf.FleeAndCower,
+            JobDefOf.Goto,
+            JobDefOf.Wait_Combat,
+        };
         private static Dictionary<Job, ThingWithComps> cachedToolsByJobs = new Dictionary<Job, ThingWithComps>();
         private static void AddEquipToolToilsPostfix(ref IEnumerable<Toil> __result, JobDriver __instance)
         {
             var pawn = __instance.pawn;
-            if (pawn?.RaceProps?.Humanlike ?? false)
+            if (!ignoredJobs.Contains(__instance.job.def) && (pawn?.RaceProps?.Humanlike ?? false))
             {
                 var list = __result.ToList();
                 var skill = ToolSearchUtility.GetActiveSkill(pawn.CurJob, list);
@@ -240,10 +254,6 @@ namespace AutoToolSwitcher
                 {
                     ToolAction toolAction;
                     var tool = skill != null ? ToolSearchUtility.FindToolFor(pawn, skill, out toolAction) : ToolSearchUtility.FindToolFor(pawn, pawn.CurJob, out toolAction);
-                    if (tool is null)
-                    {
-                        Log.Message("1 Null: " + pawn.CurJob + " - " + tool);
-                    }
                     cachedToolsByJobs[pawn.CurJob] = tool; // we do that so we retrieve this tool later rather than finding it again
                     if (tool != null)
                     {
@@ -355,7 +365,6 @@ namespace AutoToolSwitcher
                 if (job != null)
                 {
                     var activeSkill = ToolSearchUtility.GetActiveSkill(job, pawn);
-                    Log.Message("Active skill: " + activeSkill + " - " + job + " pawn: " + pawn);
                     if (activeSkill != null && tool.TryGetScore(new SkillJob(activeSkill), out var result) && result != 0)
                     {
                         cachedToolsByJobs[job] = tool;
@@ -366,14 +375,9 @@ namespace AutoToolSwitcher
                     }
                     else
                     {
-                        Log.Message("2 Null: " + job + " - " + tool);
                         cachedToolsByJobs[job] = null;
                     }
                 }
-            }
-            else
-            {
-                Log.Error(pawn + " couldn't equip " + tool);
             }
         }
 
@@ -396,7 +400,6 @@ namespace AutoToolSwitcher
                     }
                     else
                     {
-                        Log.Message("3 Null: " + job + " - " + toolUsed);
                         cachedToolsByJobs[job] = toolUsed = null;
                     }
                 }

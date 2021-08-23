@@ -54,7 +54,7 @@ namespace AutoToolSwitcher
 				if (!weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
 						&& EquipmentUtility.CanEquip(weapon, pawn) && pawn.CanReserveAndReach(weapon, PathEndMode.OnCell, pawn.NormalMaxDanger()))
 				{
-					float weaponScore = WeaponScoreGain(weapon, StatDefOf.AccuracyMedium);
+					float weaponScore = WeaponScoreGain(weapon);
 					if (!(weaponScore < 0.05f) && !(weaponScore < maxValue))
 					{
 						thing = weapon;
@@ -101,7 +101,6 @@ namespace AutoToolSwitcher
 				var policy = pawn.GetCurrentToolPolicy();
 				if (policy != null && !policy[t.def].equipAsWeapon)
 				{
-					Log.Message(policy + " prevents from taking " + t.def + " as primary weapon");
 					return false;
 				}
 				return true;
@@ -112,7 +111,6 @@ namespace AutoToolSwitcher
 				var policy = pawn.GetCurrentToolPolicy();
 				if (policy != null && !policy[t.def].takeAsSecondary)
 				{
-					Log.Message(policy + " prevents from taking " + t.def + " as secondary weapon");
 					return false;
 				}
 				return true;
@@ -148,7 +146,7 @@ namespace AutoToolSwitcher
 				if (!weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
 						&& EquipmentUtility.CanEquip(weapon, pawn) && pawn.CanReserveAndReach(weapon, PathEndMode.OnCell, pawn.NormalMaxDanger()))
 				{
-					float weaponScore = WeaponScoreGain(weapon, StatDefOf.AccuracyMedium);
+					float weaponScore = WeaponScoreGain(weapon);
 					weaponsByScores[weapon] = weaponScore;
 					if (!(weaponScore < 0.05f) && !(weaponScore < maxValue) && preferabilityValidator(weapon))
 					{
@@ -164,41 +162,27 @@ namespace AutoToolSwitcher
 			}
 			return thing;
 		}
-		public static float WeaponScoreGain(Thing weapon)
+
+		private static Dictionary<Thing, float> cachedResults = new Dictionary<Thing, float>();
+		private static float WeaponScoreGain(Thing weapon)
 		{
-			if (weapon?.def != null)
-			{
-				if (weapon.def.IsRangedWeapon)
-				{
-					var verbProperties = weapon.def.Verbs?.Where(x => x.range > 0).FirstOrDefault();
-					if (verbProperties?.defaultProjectile?.projectile != null)
-					{
-						double num = (verbProperties.defaultProjectile.projectile.GetDamageAmount(weapon, null) * (float)verbProperties.burstShotCount);
-						float num2 = (StatExtension.GetStatValue(weapon, StatDefOf.RangedWeapon_Cooldown, true) + verbProperties.warmupTime) * 60f;
-						float num3 = (verbProperties.burstShotCount * verbProperties.ticksBetweenBurstShots);
-						float num4 = (num2 + num3) / 60f;
-						var dps = (float)Math.Round(num / num4, 2);
-						return (float)Math.Round(dps, 1);
-					}
-				}
-				else if (weapon.def.IsMeleeWeapon)
-				{
-					return StatExtension.GetStatValue(weapon, StatDefOf.MeleeWeapon_AverageDPS, true);
-				}
+			if (!cachedResults.TryGetValue(weapon, out var result))
+            {
+				cachedResults[weapon] = result = WeaponScoreGainInt(weapon);
 			}
-			return 0f;
+			return result;
 		}
-		private static float WeaponScoreGain(Thing weapon, StatDef accuracyDef)
+		private static float WeaponScoreGainInt(Thing weapon)
 		{
 			if (weapon.def.IsRangedWeapon)
 			{
-				var verbProperties = weapon.def.Verbs.Where(x => x.range > 0).First();
+				var verbProperties = weapon.def.Verbs.First(x => x.range > 0);
 				double num = (verbProperties.defaultProjectile.projectile.GetDamageAmount(weapon, null) * (float)verbProperties.burstShotCount);
 				float num2 = (StatExtension.GetStatValue(weapon, StatDefOf.RangedWeapon_Cooldown, true) + verbProperties.warmupTime) * 60f;
 				float num3 = (verbProperties.burstShotCount * verbProperties.ticksBetweenBurstShots);
 				float num4 = (num2 + num3) / 60f;
 				var dps = (float)Math.Round(num / num4, 2);
-				var accuracy = StatExtension.GetStatValue(weapon, accuracyDef, true) * 100f;
+				var accuracy = StatExtension.GetStatValue(weapon, StatDefOf.AccuracyMedium, true) * 100f;
 				return (float)Math.Round(dps * accuracy / 100f, 1);
 			}
 			else if (weapon.def.IsMeleeWeapon)

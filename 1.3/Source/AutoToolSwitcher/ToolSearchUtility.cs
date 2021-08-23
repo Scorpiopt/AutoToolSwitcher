@@ -52,7 +52,6 @@ namespace AutoToolSwitcher
             var policy = p.GetCurrentToolPolicy();
             if (policy != null && !policy[x.def].takeAsTool)
             {
-                Log.Message(policy + " prevents from taking " + x.def + " as tool");
                 return false;
             }
             if (!p.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Deadly))
@@ -76,7 +75,6 @@ namespace AutoToolSwitcher
             var policy = p.GetCurrentToolPolicy();
             if (policy != null && !policy[x.def].takeAsTool)
             {
-                Log.Message(policy + " prevents from taking " + x.def + " as tool");
                 return false;
             }
             if (!p.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Deadly))
@@ -231,7 +229,6 @@ namespace AutoToolSwitcher
                 {
                     foreach (var stat in thing.def.equippedStatOffsets)
                     {
-                        Log.Message("Stat: " + stat + " - " + skillJob.skill + " - " + stat.AffectsSkill(skillJob.skill));
                         if (stat.AffectsSkill(skillJob.skill))
                         {
                             if (stat.value > 0)
@@ -251,8 +248,6 @@ namespace AutoToolSwitcher
                     isUseful = true;
                 }
             }
-
-            Log.Message(thing + " affects " + skillJob.skill + " - " + skillJob.jobDef + " - " + isUseful + " - " + result);
             return isUseful;
         }
 
