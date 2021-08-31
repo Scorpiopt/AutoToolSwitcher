@@ -13,17 +13,14 @@ namespace AutoToolSwitcher
 {
     public class SkillJob
     {
-        public SkillJob(SkillDef skill)
+        public SkillJob(SkillDef skill, Job job)
         {
             this.skill = skill;
-        }
-        public SkillJob(JobDef jobDef)
-        {
-            this.jobDef = jobDef;
+            this.job = job;
         }
 
         public SkillDef skill;
-        public JobDef jobDef;
+        public Job job;
     }
     public enum ToolAction
     {
@@ -109,14 +106,16 @@ namespace AutoToolSwitcher
                 }
             }
         }
-        public static ThingWithComps FindToolFor(Pawn pawn, Job job, out ToolAction toolAction)
+        public static ThingWithComps FindToolFor(Pawn pawn, Job job, SkillDef skillDef, out ToolAction toolAction)
         {
-            return FindToolForInt(pawn, new SkillJob(job.def), fireExtinguisherValidator, fireExtinguishers, out toolAction);
-        }
-
-        public static ThingWithComps FindToolFor(Pawn pawn, SkillDef skillDef, out ToolAction toolAction)
-        {
-            return FindToolForInt(pawn, new SkillJob(skillDef), toolValidator, toolDefs, out toolAction);
+            if (job.def == ATS_DefOf.ATS_BeatFireAdv)
+            {
+                return FindToolForInt(pawn, new SkillJob(skillDef, job), fireExtinguisherValidator, fireExtinguishers, out toolAction);
+            }
+            else
+            {
+                return FindToolForInt(pawn, new SkillJob(skillDef, job), toolValidator, toolDefs, out toolAction);
+            }
         }
         private static ThingWithComps FindToolForInt(Pawn pawn, SkillJob skillJob, Func<Pawn, Thing, bool> validator, HashSet<ThingDef> toolThingDefs, out ToolAction toolAction)
         {
@@ -240,12 +239,30 @@ namespace AutoToolSwitcher
                     }
                 }
             }
-            else if (skillJob.jobDef != null) // maybe we should add scores for tools here
+            if (skillJob.job != null) // maybe we should add scores for tools here
             {
-                if (skillJob.jobDef == ATS_DefOf.ATS_BeatFireAdv && fireExtinguishers.Contains(thing.def))
+                if (skillJob.job.def == ATS_DefOf.ATS_BeatFireAdv && fireExtinguishers.Contains(thing.def))
                 {
                     result += 1f;
                     isUseful = true;
+                }
+
+                if (skillJob.job.bill?.recipe?.workSpeedStat != null)
+                {
+                    if (thing.def.equippedStatOffsets != null)
+                    {
+                        foreach (var stat in thing.def.equippedStatOffsets)
+                        {
+                            if (stat.stat == skillJob.job.bill.recipe.workSpeedStat)
+                            {
+                                if (stat.value > 0)
+                                {
+                                    isUseful = true;
+                                }
+                                result += stat.value;
+                            }
+                        }
+                    }
                 }
             }
             return isUseful;

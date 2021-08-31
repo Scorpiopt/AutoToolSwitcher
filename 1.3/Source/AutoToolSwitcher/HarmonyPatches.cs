@@ -34,6 +34,12 @@ namespace AutoToolSwitcher
             var workTagIsDisabledPostfix = AccessTools.Method(typeof(HarmonyPatches), "WorkTagIsDisabledPostfix");
             harmony.Patch(workTagIsDisabledMeth, null, new HarmonyMethod(workTagIsDisabledPostfix));
 
+            if (ModLister.AllInstalledMods.FirstOrDefault(x => x.Active && x.PackageIdPlayerFacing == "com.yayo.combat3") != null)
+            {
+                var yayoMethod = AccessTools.Method("yayoCombat.patch_DrawEquipment:Prefix");
+                harmony.Patch(yayoMethod, new HarmonyMethod(AccessTools.Method(typeof(Patch_DrawEquipment), "PrefixForYayo")), 
+                    new HarmonyMethod(AccessTools.Method(typeof(Patch_DrawEquipment), "Postfix")));
+            }
             var methodPostfix = AccessTools.Method(typeof(HarmonyPatches), nameof(AddEquipToolToilsPostfix));
             foreach (var type in typeof(JobDriver).AllSubclasses())
             {
@@ -53,12 +59,7 @@ namespace AutoToolSwitcher
 
         public static void WorkTagIsDisabledPostfix(WorkTags w, ref Pawn __instance, ref bool __result)
         {
-            if (w != WorkTags.Violent)
-            {
-                return;
-            }
-
-            if (__result == false)
+            if (!__result && w != WorkTags.Violent)
             {
                 return;
             }
@@ -72,13 +73,19 @@ namespace AutoToolSwitcher
         [HarmonyPatch(typeof(PawnRenderer), "DrawEquipment")]
         public static class Patch_DrawEquipment
         {
-            struct Values
+            public struct Values
             {
                 public bool alwaysShowWeapon;
                 public bool neverShowWeapon;
                 public Job job;
             }
-            private static void Prefix(Pawn ___pawn, out Values? __state)
+
+            public static Values? __state;
+            private static void PrefixForYayo(Pawn __2)
+            {
+                Prefix(__2);
+            }
+            private static void Prefix(Pawn ___pawn)
             {
                 var job = ___pawn.CurJob;
                 if (job != null && ___pawn.IsUsingTool())
@@ -98,7 +105,7 @@ namespace AutoToolSwitcher
                 }
             }
 
-            private static void Postfix(Values? __state)
+            private static void Postfix()
             {
                 if (__state.HasValue)
                 {
@@ -255,7 +262,7 @@ namespace AutoToolSwitcher
                     if (pawn.Map != null)
                     {
                         ToolAction toolAction;
-                        var tool = skill != null ? ToolSearchUtility.FindToolFor(pawn, skill, out toolAction) : ToolSearchUtility.FindToolFor(pawn, pawn.CurJob, out toolAction);
+                        var tool = ToolSearchUtility.FindToolFor(pawn, __instance.job, skill, out toolAction);
                         cachedToolsByJobs[pawn.CurJob] = tool; // we do that so we retrieve this tool later rather than finding it again
                         if (tool != null)
                         {
@@ -369,11 +376,11 @@ namespace AutoToolSwitcher
                 if (job != null)
                 {
                     var activeSkill = ToolSearchUtility.GetActiveSkill(job, pawn);
-                    if (activeSkill != null && tool.TryGetScore(new SkillJob(activeSkill), out var result) && result != 0)
+                    if (activeSkill != null && tool.TryGetScore(new SkillJob(activeSkill, job), out var result) && result != 0)
                     {
                         cachedToolsByJobs[job] = tool;
                     }
-                    else if (tool.TryGetScore(new SkillJob(job.def), out var result2) && result2 != 0)
+                    else if (tool.TryGetScore(new SkillJob(activeSkill, job), out var result2) && result2 != 0)
                     {
                         cachedToolsByJobs[job] = tool;
                     }
@@ -394,11 +401,11 @@ namespace AutoToolSwitcher
                 if (!cachedToolsByJobs.TryGetValue(job, out var toolUsed))
                 {
                     var activeSkill = ToolSearchUtility.GetActiveSkill(job, pawn);
-                    if (activeSkill != null && eq.TryGetScore(new SkillJob(activeSkill), out var result) && result != 0)
+                    if (activeSkill != null && eq.TryGetScore(new SkillJob(activeSkill, job), out var result) && result != 0)
                     {
                         cachedToolsByJobs[job] = toolUsed = eq;
                     }
-                    else if (eq.TryGetScore(new SkillJob(job.def), out var result2) && result2 != 0)
+                    else if (eq.TryGetScore(new SkillJob(activeSkill, job), out var result2) && result2 != 0)
                     {
                         cachedToolsByJobs[job] = toolUsed = eq;
                     }
