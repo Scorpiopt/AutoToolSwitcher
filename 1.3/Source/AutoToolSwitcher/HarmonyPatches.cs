@@ -156,18 +156,101 @@ namespace AutoToolSwitcher
             }
         }
 
+        [HarmonyPatch(typeof(Pawn), "TryGetAttackVerb")]
+        public static class Patch_TryGetAttackVerb
+        {
+            public static void Prefix(Pawn __instance, Thing target, bool allowManualCastWeapons = false)
+            {
+                Patch_TryMeleeAttackVerb.TrySwitchWeapon(__instance, target);
+            }
+        }
+
         [HarmonyPatch(typeof(Pawn_MeleeVerbs), "TryMeleeAttack")]
         public static class Patch_TryMeleeAttackVerb
         {
+            public static Predicate<ThingWithComps> meleeValidator = delegate (ThingWithComps t)
+            {
+                if (!t.def.IsWeapon)
+                {
+                    return false;
+                }
+                if (t.def.IsRangedWeapon)
+                {
+                    return false;
+                }
+                if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
+                {
+                    return false;
+                }
+                if (t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
+                {
+                    return false;
+                }
+
+                return true;
+            };
+            public static Predicate<ThingWithComps> rangeValidator = delegate (ThingWithComps t)
+            {
+                if (!t.def.IsWeapon)
+                {
+                    return false;
+                }
+                if (!t.def.IsRangedWeapon)
+                {
+                    return false;
+                }
+                if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
+                {
+                    return false;
+                }
+                if (t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
+                {
+                    return false;
+                }
+
+                return true;
+            };
             public static void Prefix(Pawn_MeleeVerbs __instance, Thing target)
             {
-                var pawn = __instance.Pawn;
-                if ((pawn.equipment?.Primary?.def.IsRangedWeapon ?? false) && target.Position.DistanceTo(pawn.Position) <= 1.42f)
+                TrySwitchWeapon(__instance.Pawn, target);
+            }
+
+            public static void TrySwitchWeapon(Pawn pawn, Thing target)
+            {
+                if (target != null && target.Position.DistanceTo(pawn.Position) <= 1.42f)
                 {
-                    var meleeWeapon = WeaponSearchUtility.PickBestMeleeWeaponFor(pawn);
-                    if (meleeWeapon != null && meleeWeapon.GetStatValue(StatDefOf.MeleeWeapon_AverageDPS, true) > pawn.equipment.Primary.GetStatValue(StatDefOf.MeleeWeapon_AverageDPS, true))
+                    if ((pawn.equipment?.Primary?.def.IsRangedWeapon ?? false))
                     {
-                        EquipTool(pawn, meleeWeapon);
+                        var meleeWeapon = WeaponSearchUtility.PickBestWeaponFor(pawn, meleeValidator);
+                        if (meleeWeapon != null && meleeWeapon.WeaponScoreGain() > pawn.equipment.Primary.WeaponScoreGain())
+                        {
+                            EquipTool(pawn, meleeWeapon);
+                        }
+                    }
+                }
+                else
+                {
+                    var toolPolicy = pawn.GetCurrentToolPolicy();
+                    if (toolPolicy != null)
+                    {
+                        if (toolPolicy.rangeDefault)
+                        {
+                            var rangeWeapon = WeaponSearchUtility.PickBestWeaponFor(pawn, rangeValidator);
+                            if (rangeWeapon != null && (pawn.equipment.Primary is null || (!rangeValidator(pawn.equipment.Primary)
+                                || rangeWeapon.WeaponScoreGain() > pawn.equipment.Primary.WeaponScoreGain())))
+                            {
+                                EquipTool(pawn, rangeWeapon);
+                            }
+                        }
+                        else
+                        {
+                            var meleeWeapon = WeaponSearchUtility.PickBestWeaponFor(pawn, meleeValidator);
+                            if (meleeWeapon != null && (pawn.equipment.Primary is null || (!meleeValidator(pawn.equipment.Primary) ||
+                                meleeWeapon.WeaponScoreGain() > pawn.equipment.Primary.WeaponScoreGain())))
+                            {
+                                EquipTool(pawn, meleeWeapon);
+                            }
+                        }
                     }
                 }
             }

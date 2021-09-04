@@ -98,7 +98,17 @@ namespace AutoToolSwitcher
 				}
 				Find.WindowStack.Add(new FloatMenu(list2));
 			}
-			Rect rect4 = new Rect(0f, 40f, inRect.width, inRect.height - 40f - Window.CloseButSize.y).ContractedBy(10f);
+			num += 10;
+
+			var nameRect = new Rect(num, 0, 130, 30);
+			Text.Anchor = TextAnchor.MiddleCenter;
+			Widgets.Label(nameRect, "ATS.ToolPolicyName".Translate());
+			Text.Anchor = TextAnchor.UpperLeft;
+			num += 130;
+			var nameInputRect = new Rect(num, 0f, 200f, 30f);
+			DoNameInputRect(nameInputRect, ref SelectedPolicy.label);
+
+			Rect rect4 = new Rect(0f, 40f, inRect.width, inRect.height - Window.CloseButSize.y).ContractedBy(10f);
 			if (SelectedPolicy == null)
 			{
 				GUI.color = Color.grey;
@@ -110,8 +120,10 @@ namespace AutoToolSwitcher
 			else
 			{
 				GUI.BeginGroup(rect4);
-				DoNameInputRect(new Rect(0f, 0f, 200f, 30f), ref SelectedPolicy.label);
-				Rect rect5 = new Rect(0f, 40f, rect4.width, rect4.height - 45f - 10f);
+				var searchInputRect = new Rect(0f, 0f, 200f, 30f);
+				searchString = Widgets.TextField(searchInputRect, searchString);
+
+				Rect rect5 = new Rect(0f, 0f, rect4.width, rect4.height - 10f);
 				DoPolicyConfigArea(rect5);
 				GUI.EndGroup();
 			}
@@ -148,18 +160,39 @@ namespace AutoToolSwitcher
 				GUI.color = Color.white;
 				return;
 			}
-			float height = (float)SelectedPolicy.Count * 35f;
+
+			float height = ToolCount(SelectedPolicy);
 			Rect viewRect = new Rect(0f, 0f, rect3.width - 16f, height);
 			Widgets.BeginScrollView(rect3, ref scrollPosition, viewRect);
 			ToolPolicy selectedPolicy = SelectedPolicy;
+			var num = 0;
 			for (int i = 0; i < selectedPolicy.Count; i++)
 			{
-				Rect rect5 = new Rect(0f, (float)i * 35f, viewRect.width, 35f);
+				if (!searchString.NullOrEmpty() && selectedPolicy[i].tool != null && !selectedPolicy[i].tool.label.ToLower().Contains(searchString.ToLower()))
+				{
+					continue;
+				}
+
+				Rect rect5 = new Rect(0f, (float)num * 35f, viewRect.width, 35f);
 				DoEntryRow(rect5, selectedPolicy[i]);
+				num++;
 			}
 			Widgets.EndScrollView();
 		}
 
+		public float ToolCount(ToolPolicy toolPolicy)
+        {
+			float num = 0;
+			for (int i = 0; i < toolPolicy.Count; i++)
+            {
+				if (!searchString.NullOrEmpty() && toolPolicy[i].tool != null && !toolPolicy[i].tool.label.ToLower().Contains(searchString.ToLower()))
+				{
+					continue;
+				}
+				num += 35f;
+			}
+			return num;
+		}
 
 		public static float toolIconWidth = 27f;
 		public static float test = 80;
@@ -168,6 +201,8 @@ namespace AutoToolSwitcher
 		public static float takeToInventoryWidth = 80;
 		public static float test4 = 70;
 		public static float test3 = 55;
+
+		public string searchString;
 		private void DoColumnLabels(Rect rect)
 		{
 			rect.width -= 16f;
@@ -192,6 +227,20 @@ namespace AutoToolSwitcher
 			Rect rect6 = new Rect(x, rect.y, takeToInventoryWidth, rect.height);
 			Widgets.Label(rect6, "ATS.EquipAsSecondaryWeapon".Translate());
 			TooltipHandler.TipRegionByKey(rect6, "ATS.EquipAsSecondaryWeaponDesc");
+
+			var selectedPolicy = SelectedPolicy;
+			var firstWeaponType = new Rect(rect6.xMax + 10, rect6.y, 150, 30);
+			Text.Anchor = TextAnchor.MiddleCenter;
+			Widgets.Label(firstWeaponType, "ATS.FirstCombatWeaponChoice".Translate());
+			Text.Anchor = TextAnchor.UpperLeft;
+			if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 10, rect6.y, 80f, 30f), "ATS.Range".Translate(), selectedPolicy.rangeDefault))
+			{
+				selectedPolicy.rangeDefault = true;
+			}
+			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 100f, rect6.y, 80f, 30f), "ATS.Melee".Translate(), !selectedPolicy.rangeDefault))
+			{
+				selectedPolicy.rangeDefault = false;
+			}
 		}
 
 

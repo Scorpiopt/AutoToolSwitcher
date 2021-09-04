@@ -17,5 +17,8 @@
 	<ATS.EquipAsSecondaryWeaponDesc>Put in inventory as a secondary weapon. Useful when switching between weapons. If it's a melee weapon, it will be switched automatically when in a melee combat.</ATS.EquipAsSecondaryWeaponDesc>
 	<ATS.TakeAsTool>Take as tool</ATS.TakeAsTool>
 	<ATS.TakeAsToolDesc>Put in inventory as a tool. It will be picked up when going to relevant jobs.</ATS.TakeAsToolDesc>
-
+	<ATS.ToolPolicyName>Tool policy name: </ATS.ToolPolicyName>
+	<ATS.FirstCombatWeaponChoice>Main combat mode: </ATS.FirstCombatWeaponChoice>
+	<ATS.Range>Range</ATS.Range>
+	<ATS.Melee>Melee</ATS.Melee>
 </LanguageData>

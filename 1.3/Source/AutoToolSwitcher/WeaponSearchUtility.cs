@@ -22,29 +22,8 @@ namespace AutoToolSwitcher
 			}
 			return true;
 		}
-		public static ThingWithComps PickBestMeleeWeaponFor(Pawn pawn)
+		public static ThingWithComps PickBestWeaponFor(Pawn pawn, Predicate<ThingWithComps> validator)
         {
-			Predicate<ThingWithComps> validator = delegate (ThingWithComps t)
-			{
-				if (!t.def.IsWeapon)
-				{
-					return false;
-				}
-				if (t.def.IsRangedWeapon)
-				{
-					return false;
-				}
-				if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
-				{
-					return false;
-				}
-				if (t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
-				{
-					return false;
-				}
-				return true;
-			};
-
 			ThingWithComps thing = null;
 			float maxValue = 0f;
 			List<ThingWithComps> weapons = pawn.inventory.innerContainer.InnerListForReading.OfType<ThingWithComps>().Where(x => validator(x)).ToList();
@@ -62,7 +41,6 @@ namespace AutoToolSwitcher
 					}
 				}
 			}
-
 			return thing;
 		}
 
@@ -164,7 +142,7 @@ namespace AutoToolSwitcher
 		}
 
 		private static Dictionary<Thing, float> cachedResults = new Dictionary<Thing, float>();
-		private static float WeaponScoreGain(Thing weapon)
+		public static float WeaponScoreGain(this Thing weapon)
 		{
 			if (!cachedResults.TryGetValue(weapon, out var result))
             {

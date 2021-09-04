@@ -15,6 +15,7 @@ namespace AutoToolSwitcher
         private List<ToolPolicyEntry> entriesInt;
         public int Count => entriesInt.Count;
 
+        public bool rangeDefault = true;
         public ToolPolicyEntry this[int index]
         {
             get
@@ -83,6 +84,7 @@ namespace AutoToolSwitcher
             Scribe_Values.Look(ref label, "label");
             Scribe_Collections.Look(ref entriesInt, "Tools", LookMode.Deep);
             Scribe_Defs.Look(ref sourceDef, "sourceDef");
+            Scribe_Values.Look(ref rangeDefault, "rangeDefault", true);
             if (Scribe.mode == LoadSaveMode.PostLoadInit && entriesInt != null)
             {
                 if (entriesInt.RemoveAll((ToolPolicyEntry x) => x == null || x.tool == null) != 0)
