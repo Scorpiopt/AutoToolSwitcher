@@ -104,9 +104,7 @@ namespace AutoToolSwitcher
 			Text.Anchor = TextAnchor.MiddleCenter;
 			Widgets.Label(nameRect, "ATS.ToolPolicyName".Translate());
 			Text.Anchor = TextAnchor.UpperLeft;
-			num += 130;
-			var nameInputRect = new Rect(num, 0f, 200f, 30f);
-			DoNameInputRect(nameInputRect, ref SelectedPolicy.label);
+
 
 			Rect rect4 = new Rect(0f, 40f, inRect.width, inRect.height - Window.CloseButSize.y).ContractedBy(10f);
 			if (SelectedPolicy == null)
@@ -119,6 +117,10 @@ namespace AutoToolSwitcher
 			}
 			else
 			{
+				num += 130;
+				var nameInputRect = new Rect(num, 0f, 200f, 30f);
+				DoNameInputRect(nameInputRect, ref SelectedPolicy.label);
+
 				GUI.BeginGroup(rect4);
 				var searchInputRect = new Rect(0f, 0f, 200f, 30f);
 				searchString = Widgets.TextField(searchInputRect, searchString);
