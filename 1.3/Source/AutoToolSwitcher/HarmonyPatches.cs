@@ -24,9 +24,10 @@ namespace AutoToolSwitcher
     [StaticConstructorOnStartup]
     public static class HarmonyPatches
     {
+        public static Harmony harmony;
         static HarmonyPatches()
         {
-            var harmony = new Harmony("AutoToolSwitcher.Mod");
+            harmony = new Harmony("AutoToolSwitcher.Mod");
             harmony.Patch(AccessTools.Method(typeof(JobGiver_OptimizeApparel), "TryGiveJob"),
                 new HarmonyMethod(typeof(HarmonyPatches), nameof(TryFindGunJobPrefix)));
 
@@ -37,7 +38,7 @@ namespace AutoToolSwitcher
             if (ModLister.AllInstalledMods.FirstOrDefault(x => x.Active && x.PackageIdPlayerFacing == "com.yayo.combat3") != null)
             {
                 var yayoMethod = AccessTools.Method("yayoCombat.patch_DrawEquipment:Prefix");
-                harmony.Patch(yayoMethod, new HarmonyMethod(AccessTools.Method(typeof(Patch_DrawEquipment), "PrefixForYayo")), 
+                harmony.Patch(yayoMethod, new HarmonyMethod(AccessTools.Method(typeof(Patch_DrawEquipment), "PrefixForYayo")),
                     new HarmonyMethod(AccessTools.Method(typeof(Patch_DrawEquipment), "Postfix")));
             }
             var methodPostfix = AccessTools.Method(typeof(HarmonyPatches), nameof(AddEquipToolToilsPostfix));
@@ -140,7 +141,7 @@ namespace AutoToolSwitcher
             //    }
             //}
         }
-        
+
         [HarmonyPatch(typeof(JobMaker), "MakeJob", new Type[] { typeof(JobDef), typeof(LocalTargetInfo) })]
         public static class Patch_MakeJob
         {
@@ -207,7 +208,6 @@ namespace AutoToolSwitcher
                 {
                     return false;
                 }
-
                 return true;
             };
             public static void Prefix(Pawn_MeleeVerbs __instance, Thing target)
@@ -221,7 +221,7 @@ namespace AutoToolSwitcher
                 {
                     if ((pawn.equipment?.Primary?.def.IsRangedWeapon ?? false))
                     {
-                        var meleeWeapon = WeaponSearchUtility.PickBestWeaponFor(pawn, meleeValidator);
+                        var meleeWeapon = WeaponSearchUtility.PickBestWeapon(pawn, meleeValidator);
                         if (meleeWeapon != null && meleeWeapon.WeaponScoreGain() > pawn.equipment.Primary.WeaponScoreGain())
                         {
                             EquipTool(pawn, meleeWeapon);
@@ -235,7 +235,7 @@ namespace AutoToolSwitcher
                     {
                         if (toolPolicy.rangeDefault)
                         {
-                            var rangeWeapon = WeaponSearchUtility.PickBestWeaponFor(pawn, rangeValidator);
+                            var rangeWeapon = WeaponSearchUtility.PickBestWeapon(pawn, rangeValidator);
                             if (rangeWeapon != null && (pawn.equipment.Primary is null || (!rangeValidator(pawn.equipment.Primary)
                                 || rangeWeapon.WeaponScoreGain() > pawn.equipment.Primary.WeaponScoreGain())))
                             {
@@ -244,7 +244,7 @@ namespace AutoToolSwitcher
                         }
                         else
                         {
-                            var meleeWeapon = WeaponSearchUtility.PickBestWeaponFor(pawn, meleeValidator);
+                            var meleeWeapon = WeaponSearchUtility.PickBestWeapon(pawn, meleeValidator);
                             if (meleeWeapon != null && (pawn.equipment.Primary is null || (!meleeValidator(pawn.equipment.Primary) ||
                                 meleeWeapon.WeaponScoreGain() > pawn.equipment.Primary.WeaponScoreGain())))
                             {
@@ -273,40 +273,76 @@ namespace AutoToolSwitcher
         }
         private static bool TryFindGunJobPrefix(ref Job __result, Pawn pawn)
         {
-            if (!WeaponSearchUtility.CanLookForWeapon(pawn))
+            if (pawn is null || pawn.RaceProps.Animal)
             {
-                return true;
+                return false;
             }
-            var weapon = WeaponSearchUtility.PickBestWeaponFor(pawn, out var secondaryWeapon);
-            if (weapon == null && secondaryWeapon == null)
+            if (pawn.CanLookForWeapon())
             {
-                return true;
-            }
-            if (weapon != null && weapon.def != pawn.equipment.Primary?.def)
-            {
-                if (pawn.inventory.innerContainer.Contains(weapon))
+                var weapon = WeaponSearchUtility.PickBestWeaponFor(pawn, out var secondaryWeapon);
+                if (weapon != null || secondaryWeapon != null)
                 {
-                    EquipTool(pawn, weapon as ThingWithComps);
-                }
-                else
-                {
-                    __result = JobMaker.MakeJob(JobDefOf.Equip, weapon);
-                }
-            }
-            else if (secondaryWeapon != null && !pawn.inventory.innerContainer.Any(x => x.def == secondaryWeapon.def))
-            {
-                if (pawn.equipment.Primary == secondaryWeapon)
-                {
-                    if (secondaryWeapon.holdingOwner != null)
+                    if (weapon != null && weapon.def != pawn.equipment.Primary?.def)
                     {
-                        secondaryWeapon.holdingOwner.Remove(secondaryWeapon);
+                        if (pawn.inventory.innerContainer.Contains(weapon))
+                        {
+                            EquipTool(pawn, weapon as ThingWithComps);
+                        }
+                        else
+                        {
+                            __result = JobMaker.MakeJob(JobDefOf.Equip, weapon);
+                        }
                     }
-                    pawn.inventory.TryAddItemNotForSale(secondaryWeapon);
+                    else if (secondaryWeapon != null && !pawn.inventory.innerContainer.Any(x => x.def == secondaryWeapon.def))
+                    {
+                        if (pawn.equipment.Primary == secondaryWeapon)
+                        {
+                            if (secondaryWeapon.holdingOwner != null)
+                            {
+                                secondaryWeapon.holdingOwner.Remove(secondaryWeapon);
+                            }
+                            pawn.inventory.TryAddItemNotForSale(secondaryWeapon);
+                        }
+                        else
+                        {
+                            __result = JobMaker.MakeJob(JobDefOf.TakeInventory, secondaryWeapon);
+                            __result.count = 1;
+                        }
+                    }
                 }
-                else
+            }
+
+            if (__result is null)
+            {
+                var toolPolicy = pawn.GetCurrentToolPolicy();
+                if (toolPolicy != null)
                 {
-                    __result = JobMaker.MakeJob(JobDefOf.TakeInventory, secondaryWeapon);
-                    __result.count = 1;
+                    var primary = pawn.equipment?.Primary;
+                    if (primary != null && primary.def.IsTool())
+                    {
+                        var curPolicy = toolPolicy[primary.def];
+                        if (!curPolicy.equipAsWeapon && !curPolicy.takeAsTool 
+                            && (!ModCompatUtility.combatExtendedLoaded || !ModCompatUtility.HasActiveInCELoadout(pawn, primary, out _)))
+                        {
+                            __result = HaulTool(pawn, primary);
+                        }
+                    }
+
+                    if (__result is null && pawn.inventory != null)
+                    {
+                        var things = pawn.inventory.innerContainer.ToList();
+                        foreach (var thing in things)
+                        {
+                            if (thing.def.IsTool())
+                            {
+                                var curPolicy = toolPolicy[thing.def];
+                                if (!curPolicy.takeAsTool && (!ModCompatUtility.combatExtendedLoaded || !ModCompatUtility.HasActiveInCELoadout(pawn, thing, out _)))
+                                {
+                                    __result = HaulTool(pawn, thing);
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -317,6 +353,18 @@ namespace AutoToolSwitcher
             return true;
         }
 
+        private static Job HaulTool(Pawn pawn, Thing thing)
+        {
+            Thing droppedThing;
+            if (thing.holdingOwner.TryDrop(thing, pawn.Position, pawn.Map, ThingPlaceMode.Near, 1, out droppedThing))
+            {
+                if (droppedThing != null)
+                {
+                    return HaulAIUtility.HaulToStorageJob(pawn, droppedThing);
+                }
+            }
+            return null;
+        }
         private static HashSet<JobDef> ignoredJobs = new HashSet<JobDef>
         {
             JobDefOf.GotoWander,

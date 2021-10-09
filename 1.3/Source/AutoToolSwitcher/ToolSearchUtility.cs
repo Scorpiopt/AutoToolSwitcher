@@ -85,16 +85,25 @@ namespace AutoToolSwitcher
         {
             foreach (var thingDef in DefDatabase<ThingDef>.AllDefs)
             {
-                if (thingDef.equippedStatOffsets?.Any(x => x.value > 0) ?? false && thingDef.comps != null)
+                if (thingDef?.equippedStatOffsets?.Any(x => x?.value > 0) ?? false && thingDef.comps != null)
                 {
                     foreach (var comp in thingDef.comps)
                     {
-                        if (typeof(CompEquippable).IsAssignableFrom(comp.compClass))
+                        if (comp.compClass != null && typeof(CompEquippable).IsAssignableFrom(comp.compClass))
                         {
                             toolDefs.Add(thingDef);
                             break;
                         }
+                        if (comp.compClass is null)
+                        {
+                            Log.Error(comp + " has a missing comp class. It will lead to bugs.");
+                        }
                     }
+                }
+
+                if (ModCompatUtility.survivalToolsLoaded && thingDef.IsSurvivalTool())
+                {
+                    toolDefs.Add(thingDef);
                 }
             }
             foreach (var defName in fireExtinguisherDefnames)
@@ -265,10 +274,19 @@ namespace AutoToolSwitcher
                     }
                 }
             }
+
+            if (ModCompatUtility.survivalToolsLoaded)
+            {
+                var score = ModCompatUtility.GetScoreFromSurvivalTool(thing, skillJob, ref isUseful);
+                if (score != 0)
+                {
+                    result *= score;
+                }
+            }
             return isUseful;
         }
 
-        private static bool AffectsSkill(this StatModifier statModifier, SkillDef skill)
+        public static bool AffectsSkill(this StatModifier statModifier, SkillDef skill)
         {
             if (statModifier.stat.skillNeedOffsets != null)
             {

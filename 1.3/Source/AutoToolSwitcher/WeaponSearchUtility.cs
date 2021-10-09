@@ -13,16 +13,28 @@ namespace AutoToolSwitcher
 {
     public static class WeaponSearchUtility
     {
-		public static bool CanLookForWeapon(Pawn pawn)
+		public static bool CanLookForWeapon(this Pawn pawn)
         {
 			if (pawn.Map == null || pawn.equipment == null || pawn.Faction != Faction.OfPlayer || pawn.IsQuestLodger()
 				|| !pawn.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation) || pawn.WorkTagIsDisabled(WorkTags.Violent))
 			{
 				return false;
 			}
+			if (ModCompatUtility.combatExtendedLoaded)
+            {
+				var primary = pawn.equipment.Primary;
+				if (ModCompatUtility.HasActiveInCELoadout(pawn, primary, out bool hasActiveWeaponsInLoadout))
+				{
+					return false;
+				}
+				if (hasActiveWeaponsInLoadout)
+                {
+					return false;
+                }
+			}
 			return true;
 		}
-		public static ThingWithComps PickBestWeaponFor(Pawn pawn, Predicate<ThingWithComps> validator)
+		public static ThingWithComps PickBestWeapon(Pawn pawn, Predicate<ThingWithComps> validator)
         {
 			ThingWithComps thing = null;
 			float maxValue = 0f;
@@ -33,6 +45,11 @@ namespace AutoToolSwitcher
 				if (!weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
 						&& EquipmentUtility.CanEquip(weapon, pawn) && pawn.CanReserveAndReach(weapon, PathEndMode.OnCell, pawn.NormalMaxDanger()))
 				{
+					var policy = pawn.GetCurrentToolPolicy();
+					if (policy != null && !policy[weapon.def].equipAsWeapon)
+                    {
+						continue;
+                    }
 					float weaponScore = WeaponScoreGain(weapon);
 					if (!(weaponScore < 0.05f) && !(weaponScore < maxValue))
 					{
@@ -109,9 +126,9 @@ namespace AutoToolSwitcher
 
 			Thing thing = null;
 			float maxValue = 0f;
-			List<Thing> list = pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.Weapon).Where(x => validator(x)).ToList();
+			List<Thing> list = pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.Weapon);
 
-			List<Thing> weapons = pawn.inventory.innerContainer.InnerListForReading.Where(x => validator(x)).ToList();
+			List<Thing> weapons = pawn.inventory.innerContainer.InnerListForReading.ToList();
 			list.AddRange(weapons);
 			if (pawn.equipment.Primary != null)
 			{
@@ -121,7 +138,7 @@ namespace AutoToolSwitcher
 			for (int j = 0; j < list.Count; j++)
 			{
 				Thing weapon = list[j];
-				if (!weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
+				if (validator(weapon) && !weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
 						&& EquipmentUtility.CanEquip(weapon, pawn) && pawn.CanReserveAndReach(weapon, PathEndMode.OnCell, pawn.NormalMaxDanger()))
 				{
 					float weaponScore = WeaponScoreGain(weapon);
