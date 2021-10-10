@@ -25,5 +25,6 @@
 	<ATS.ToggleEquipSound>Toggle equip sound</ATS.ToggleEquipSound>
 	<ATS.ToggleAutoMelee>Toggle auto melee</ATS.ToggleAutoMelee>
 	<ATS.SelectAll>All</ATS.SelectAll>
+	<ATS.MinQualityForWeaponsTools>Minimum required quality for tools/weapons: </ATS.MinQualityForWeaponsTools>
 
 </LanguageData>

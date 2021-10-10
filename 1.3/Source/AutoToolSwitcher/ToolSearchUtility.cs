@@ -40,14 +40,14 @@ namespace AutoToolSwitcher
         };
         public static HashSet<ThingDef> fireExtinguishers = new HashSet<ThingDef>();
 
-        private static Func<Pawn, Thing, bool> toolValidator = delegate (Pawn p, Thing x)
+        public static bool IsTool(this ThingDef thingDef)
         {
-            if (!toolDefs.Contains(x.def))
-            {
-                return false;
-            }
-            var policy = p.GetCurrentToolPolicy();
-            if (policy != null && !policy[x.def].takeAsTool)
+            return toolDefs.Contains(thingDef) || fireExtinguishers.Contains(thingDef);
+        }
+
+        public static Func<Pawn, Thing, ToolPolicy, bool> baseToolValidator = delegate (Pawn p, Thing x, ToolPolicy policy)
+        {
+            if (policy != null && !policy.SatisfiedBy(x))
             {
                 return false;
             }
@@ -58,10 +58,23 @@ namespace AutoToolSwitcher
             return true;
         };
 
-        public static bool IsTool(this ThingDef thingDef)
+        private static Func<Pawn, Thing, bool> toolValidator = delegate (Pawn p, Thing x)
         {
-            return toolDefs.Contains(thingDef) || fireExtinguishers.Contains(thingDef);
-        }
+            if (!toolDefs.Contains(x.def))
+            {
+                return false;
+            }
+            var policy = p.GetCurrentToolPolicy();
+            if (!policy[x.def].takeAsTool)
+            {
+                return false;
+            }
+            if (!baseToolValidator(p, x, policy))
+            {
+                return false;
+            }
+            return true;
+        };
 
         private static Func<Pawn, Thing, bool> fireExtinguisherValidator = delegate (Pawn p, Thing x)
         {
@@ -70,11 +83,11 @@ namespace AutoToolSwitcher
                 return false;
             }
             var policy = p.GetCurrentToolPolicy();
-            if (policy != null && !policy[x.def].takeAsTool)
+            if (!policy[x.def].takeAsTool)
             {
                 return false;
             }
-            if (!p.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Deadly))
+            if (!baseToolValidator(p, x, policy))
             {
                 return false;
             }

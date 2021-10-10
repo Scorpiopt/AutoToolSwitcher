@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RimWorld;
+using System;
 using System.Collections.Generic;
 using Verse;
 
@@ -25,6 +26,7 @@ namespace AutoToolSwitcher
 
         public bool toggleEquipSound = true;
         public bool toggleAutoMelee = true;
+        public QualityCategory minQuality = QualityCategory.Awful;
         public ToolPolicyEntry this[int index]
         {
             get
@@ -63,6 +65,14 @@ namespace AutoToolSwitcher
             InitializeIfNeeded();
         }
 
+        public bool SatisfiedBy(Thing tool)
+        {
+            if (tool.TryGetQuality(out var qc) && this.minQuality > qc)
+            {
+                return false;
+            }
+            return true;
+        }
         public void InitializeIfNeeded(bool overwriteExisting = true)
         {
             if (overwriteExisting)
@@ -96,6 +106,7 @@ namespace AutoToolSwitcher
             Scribe_Values.Look(ref combatMode, "combatMode", CombatMode.Range);
             Scribe_Values.Look(ref toggleEquipSound, "toggleEquipSound", true);
             Scribe_Values.Look(ref toggleAutoMelee, "toggleAutoMelee", true);
+            Scribe_Values.Look(ref minQuality, "minQuality");
             if (Scribe.mode == LoadSaveMode.PostLoadInit && entriesInt != null)
             {
                 if (entriesInt.RemoveAll((ToolPolicyEntry x) => x == null || x.tool == null) != 0)

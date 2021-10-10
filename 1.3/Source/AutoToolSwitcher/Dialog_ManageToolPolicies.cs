@@ -7,6 +7,12 @@ using Verse;
 
 namespace AutoToolSwitcher
 {
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+	public class HotSwappableAttribute : Attribute
+	{
+	}
+
+	[HotSwappableAttribute]
 	[StaticConstructorOnStartup]
 	public class Dialog_ManageToolPolicies : Window
 	{
@@ -129,17 +135,21 @@ namespace AutoToolSwitcher
 				DoPolicyConfigArea(rect5);
 				GUI.EndGroup();
 			}
-			DoToggles(inRect);
+			DoTogglesAndSliders(inRect);
 			Text.Font = GameFont.Small;
 		}
-
-		private void DoToggles(Rect rect)
+		private void DoTogglesAndSliders(Rect rect)
         {
 			var toggleEquipSoundRect = new Rect(rect.x + 10, rect.y + 615, 190, 24);
 			Widgets.CheckboxLabeled(toggleEquipSoundRect, "ATS.ToggleEquipSound".Translate(), ref SelectedPolicy.toggleEquipSound);
 			var toggleAutoMeleeRect = new Rect(toggleEquipSoundRect.x, toggleEquipSoundRect.yMax, toggleEquipSoundRect.width, toggleEquipSoundRect.height);
 			Widgets.CheckboxLabeled(toggleAutoMeleeRect, "ATS.ToggleAutoMelee".Translate(), ref SelectedPolicy.toggleAutoMelee);
 
+			var minQualitySliderLabel = new Rect(toggleEquipSoundRect.xMax + 300, toggleEquipSoundRect.y, 180, 50);
+			Widgets.Label(minQualitySliderLabel, "ATS.MinQualityForWeaponsTools".Translate());
+			var minQualitySliderRect = new Rect(minQualitySliderLabel.xMax, minQualitySliderLabel.y, 150, 25);
+			SelectedPolicy.minQuality = (QualityCategory)Widgets.HorizontalSlider(minQualitySliderRect, (float)SelectedPolicy.minQuality, 0, 
+				(float)QualityCategory.Legendary, true, SelectedPolicy.minQuality.GetLabel());
 		}
 		public override void PreClose()
 		{

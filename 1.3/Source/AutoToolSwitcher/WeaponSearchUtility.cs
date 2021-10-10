@@ -46,10 +46,13 @@ namespace AutoToolSwitcher
 						&& EquipmentUtility.CanEquip(weapon, pawn) && pawn.CanReserveAndReach(weapon, PathEndMode.OnCell, pawn.NormalMaxDanger()))
 				{
 					var policy = pawn.GetCurrentToolPolicy();
-					if (policy != null && !policy[weapon.def].equipAsWeapon)
+					if (policy != null)
                     {
-						continue;
-                    }
+						if (!policy[weapon.def].equipAsWeapon || weapon.TryGetQuality(out var qc) && policy.minQuality > qc)
+                        {
+							continue;
+						}
+					}
 					float weaponScore = WeaponScoreGain(weapon);
 					if (!(weaponScore < 0.05f) && !(weaponScore < maxValue))
 					{
@@ -67,7 +70,9 @@ namespace AutoToolSwitcher
 			bool isBrawler = pawn.story?.traits?.HasTrait(TraitDefOf.Brawler) ?? false;
 			bool preferRanged = !isBrawler && (!pawn.equipment.Primary?.def.IsMeleeWeapon ?? false || pawn.equipment.Primary == null);
 			secondaryWeapon = null;
-			Predicate<Thing> validator = delegate (Thing t)
+			var policy = pawn.GetCurrentToolPolicy();
+
+			Predicate<Thing> mainValidator = delegate (Thing t)
 			{
 				if (!t.def.IsWeapon)
 				{
@@ -93,9 +98,8 @@ namespace AutoToolSwitcher
                 {
 					return false;
                 }
-				var policy = pawn.GetCurrentToolPolicy();
-				if (policy != null && !policy[t.def].equipAsWeapon)
-				{
+				if (!ToolSearchUtility.baseToolValidator(pawn, t, policy))
+                {
 					return false;
 				}
 				return true;
@@ -103,8 +107,11 @@ namespace AutoToolSwitcher
 
 			Predicate<Thing> secondaryWeaponValidator = delegate (Thing t)
 			{
-				var policy = pawn.GetCurrentToolPolicy();
 				if (policy != null && !policy[t.def].takeAsSecondary)
+				{
+					return false;
+				}
+				if (!ToolSearchUtility.baseToolValidator(pawn, t, policy))
 				{
 					return false;
 				}
@@ -138,12 +145,12 @@ namespace AutoToolSwitcher
 			for (int j = 0; j < list.Count; j++)
 			{
 				Thing weapon = list[j];
-				if (validator(weapon) && !weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
+				if (mainValidator(weapon) && !weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
 						&& EquipmentUtility.CanEquip(weapon, pawn) && pawn.CanReserveAndReach(weapon, PathEndMode.OnCell, pawn.NormalMaxDanger()))
 				{
 					float weaponScore = WeaponScoreGain(weapon);
 					weaponsByScores[weapon] = weaponScore;
-					if (!(weaponScore < 0.05f) && !(weaponScore < maxValue) && preferabilityValidator(weapon))
+					if (policy[weapon.def].equipAsWeapon && !(weaponScore < 0.05f) && !(weaponScore < maxValue) && preferabilityValidator(weapon))
 					{
 						thing = weapon;
 						maxValue = weaponScore;
