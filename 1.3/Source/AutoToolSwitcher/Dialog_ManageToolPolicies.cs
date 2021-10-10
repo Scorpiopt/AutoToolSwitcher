@@ -129,7 +129,17 @@ namespace AutoToolSwitcher
 				DoPolicyConfigArea(rect5);
 				GUI.EndGroup();
 			}
+			DoToggles(inRect);
 			Text.Font = GameFont.Small;
+		}
+
+		private void DoToggles(Rect rect)
+        {
+			var toggleEquipSoundRect = new Rect(rect.x + 10, rect.y + 615, 190, 24);
+			Widgets.CheckboxLabeled(toggleEquipSoundRect, "ATS.ToggleEquipSound".Translate(), ref SelectedPolicy.toggleEquipSound);
+			var toggleAutoMeleeRect = new Rect(toggleEquipSoundRect.x, toggleEquipSoundRect.yMax, toggleEquipSoundRect.width, toggleEquipSoundRect.height);
+			Widgets.CheckboxLabeled(toggleAutoMeleeRect, "ATS.ToggleAutoMelee".Translate(), ref SelectedPolicy.toggleAutoMelee);
+
 		}
 		public override void PreClose()
 		{
@@ -205,6 +215,8 @@ namespace AutoToolSwitcher
 		public static float test3 = 55;
 
 		public string searchString;
+
+
 		private void DoColumnLabels(Rect rect)
 		{
 			rect.width -= 16f;
@@ -216,32 +228,168 @@ namespace AutoToolSwitcher
 			Text.Anchor = TextAnchor.UpperCenter;
 
 			x += toolNameWidth + toolIconWidth + test4;
-			Rect rect3 = new Rect(x, rect.y, takeToInventoryWidth, rect.height);
+			Rect rect3 = new Rect(x, rect.y, takeToInventoryWidth, 50);
 			Widgets.Label(rect3, "ATS.TakeAsTool".Translate());
 			TooltipHandler.TipRegionByKey(rect3, "ATS.TakeAsToolDesc");
 
+			var prevAnchor = Text.Anchor;
+			Text.Anchor = TextAnchor.MiddleLeft;
+
+			var selectAllToggleRect = new Rect(rect3.x + 20, rect3.yMax - 28, 54, 25);
+			bool? selectedAll = null;
+			if (SelectedPolicy.entriesInt.TrueForAll(opt => opt.takeAsTool))
+            {
+				selectedAll = true;
+			}
+			else if (SelectedPolicy.entriesInt.TrueForAll(opt => !opt.takeAsTool))
+            {
+				selectedAll = false;
+			}
+
+			if (selectedAll != null)
+            {
+				var value = selectedAll.Value;
+				Widgets.CheckboxLabeled(selectAllToggleRect, "ATS.SelectAll".Translate(), ref value);
+				if (value != selectedAll.Value)
+                {
+					SelectedPolicy.entriesInt.ForEach(opt => opt.takeAsTool = value);
+				}
+			}
+			else
+            {
+				var labelRect = selectAllToggleRect;
+				labelRect.width -= 24;
+				var checkBoxRect = selectAllToggleRect;
+				checkBoxRect.x = labelRect.xMax;
+				checkBoxRect.width = 24;
+
+				Widgets.Label(labelRect, "ATS.SelectAll".Translate());
+				var state = Widgets.CheckboxMulti(checkBoxRect, MultiCheckboxState.Partial);
+				if (state == MultiCheckboxState.On)
+                {
+					SelectedPolicy.entriesInt.ForEach(opt => opt.takeAsTool = true);
+				}
+				else if (state == MultiCheckboxState.Off)
+                {
+					SelectedPolicy.entriesInt.ForEach(opt => opt.takeAsTool = false);
+				}
+			}
+			Text.Anchor = prevAnchor;
+
+
 			x += test;
-			Rect rect5 = new Rect(x, rect.y, takeToInventoryWidth, rect.height);
+			Rect rect5 = new Rect(x, rect.y, takeToInventoryWidth, 50);
 			Widgets.Label(rect5, "ATS.Equip".Translate());
 			TooltipHandler.TipRegionByKey(rect5, "ATS.EquipDesc");
 
+			Text.Anchor = TextAnchor.MiddleLeft;
+			var selectAllEquipWeaponToggleRect = new Rect(rect5.x + 20, rect5.yMax - 28, 54, 25);
+			bool? selectedEquipWeaponAll = null;
+			if (SelectedPolicy.entriesInt.TrueForAll(opt => opt.equipAsWeapon))
+			{
+				selectedEquipWeaponAll = true;
+			}
+			else if (SelectedPolicy.entriesInt.TrueForAll(opt => !opt.equipAsWeapon))
+			{
+				selectedEquipWeaponAll = false;
+			}
+
+			if (selectedEquipWeaponAll != null)
+			{
+				var value = selectedEquipWeaponAll.Value;
+				Widgets.CheckboxLabeled(selectAllEquipWeaponToggleRect, "ATS.SelectAll".Translate(), ref value);
+				if (value != selectedEquipWeaponAll.Value)
+				{
+					SelectedPolicy.entriesInt.ForEach(opt => opt.equipAsWeapon = value);
+				}
+			}
+			else
+			{
+				var labelRect = selectAllEquipWeaponToggleRect;
+				labelRect.width -= 24;
+				var checkBoxRect = selectAllEquipWeaponToggleRect;
+				checkBoxRect.x = labelRect.xMax;
+				checkBoxRect.width = 24;
+
+				Widgets.Label(labelRect, "ATS.SelectAll".Translate());
+				var state = Widgets.CheckboxMulti(checkBoxRect, MultiCheckboxState.Partial);
+				if (state == MultiCheckboxState.On)
+				{
+					SelectedPolicy.entriesInt.ForEach(opt => opt.equipAsWeapon = true);
+				}
+				else if (state == MultiCheckboxState.Off)
+				{
+					SelectedPolicy.entriesInt.ForEach(opt => opt.equipAsWeapon = false);
+				}
+			}
+
+			Text.Anchor = prevAnchor;
+
 			x += test2;
-			Rect rect6 = new Rect(x, rect.y, takeToInventoryWidth, rect.height);
+			Rect rect6 = new Rect(x, rect.y, takeToInventoryWidth, 50);
 			Widgets.Label(rect6, "ATS.EquipAsSecondaryWeapon".Translate());
 			TooltipHandler.TipRegionByKey(rect6, "ATS.EquipAsSecondaryWeaponDesc");
+
+			Text.Anchor = TextAnchor.MiddleLeft;
+			var selectAllSecondaryToggleRect = new Rect(rect6.x + 20, rect6.yMax - 28, 54, 25);
+			bool? selectedSecondaryAll = null;
+			if (SelectedPolicy.entriesInt.TrueForAll(opt => opt.takeAsSecondary))
+			{
+				selectedSecondaryAll = true;
+			}
+			else if (SelectedPolicy.entriesInt.TrueForAll(opt => !opt.takeAsSecondary))
+			{
+				selectedSecondaryAll = false;
+			}
+
+			if (selectedSecondaryAll != null)
+			{
+				var value = selectedSecondaryAll.Value;
+				Widgets.CheckboxLabeled(selectAllSecondaryToggleRect, "ATS.SelectAll".Translate(), ref value);
+				if (value != selectedSecondaryAll.Value)
+				{
+					SelectedPolicy.entriesInt.ForEach(opt => opt.takeAsSecondary = value);
+				}
+			}
+			else
+			{
+				var labelRect = selectAllSecondaryToggleRect;
+				labelRect.width -= 24;
+				var checkBoxRect = selectAllSecondaryToggleRect;
+				checkBoxRect.x = labelRect.xMax;
+				checkBoxRect.width = 24;
+
+				Widgets.Label(labelRect, "ATS.SelectAll".Translate());
+				var state = Widgets.CheckboxMulti(checkBoxRect, MultiCheckboxState.Partial);
+				if (state == MultiCheckboxState.On)
+				{
+					SelectedPolicy.entriesInt.ForEach(opt => opt.takeAsSecondary = true);
+				}
+				else if (state == MultiCheckboxState.Off)
+				{
+					SelectedPolicy.entriesInt.ForEach(opt => opt.takeAsSecondary = false);
+				}
+			}
+
+			Text.Anchor = prevAnchor;
+
 
 			var selectedPolicy = SelectedPolicy;
 			var firstWeaponType = new Rect(rect6.xMax + 10, rect6.y, 150, 30);
 			Text.Anchor = TextAnchor.MiddleCenter;
 			Widgets.Label(firstWeaponType, "ATS.FirstCombatWeaponChoice".Translate());
 			Text.Anchor = TextAnchor.UpperLeft;
-			if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 10, rect6.y, 80f, 30f), "ATS.Range".Translate(), selectedPolicy.rangeDefault))
+			if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 10, rect6.y, 80f, 30f), "ATS.Range".Translate(), selectedPolicy.combatMode == CombatMode.Range))
 			{
-				selectedPolicy.rangeDefault = true;
+				selectedPolicy.combatMode = CombatMode.Range;
 			}
-			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 100f, rect6.y, 80f, 30f), "ATS.Melee".Translate(), !selectedPolicy.rangeDefault))
+			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 100f, rect6.y, 80f, 30f), "ATS.Melee".Translate(), selectedPolicy.combatMode == CombatMode.Melee))
 			{
-				selectedPolicy.rangeDefault = false;
+				selectedPolicy.combatMode = CombatMode.Melee;
+			}
+			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 200f, rect6.y, 80f, 30f), "ATS.None".Translate(), selectedPolicy.combatMode == CombatMode.None))
+			{
+				selectedPolicy.combatMode = CombatMode.None;
 			}
 		}
 

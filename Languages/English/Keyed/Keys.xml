@@ -13,7 +13,7 @@
 	<ATS.ToolNameColumnDesc>The name of a tool.</ATS.ToolNameColumnDesc>
 	<ATS.Equip>Equip</ATS.Equip>
 	<ATS.EquipDesc>Equip it as a main weapon. When checked on, pawns with this tool policy will go and equip it on their own.</ATS.EquipDesc>
-	<ATS.EquipAsSecondaryWeapon>Secondary weapon</ATS.EquipAsSecondaryWeapon>
+	<ATS.EquipAsSecondaryWeapon>Secondary</ATS.EquipAsSecondaryWeapon>
 	<ATS.EquipAsSecondaryWeaponDesc>Put in inventory as a secondary weapon. Useful when switching between weapons. If it's a melee weapon, it will be switched automatically when in a melee combat.</ATS.EquipAsSecondaryWeaponDesc>
 	<ATS.TakeAsTool>Take as tool</ATS.TakeAsTool>
 	<ATS.TakeAsToolDesc>Put in inventory as a tool. It will be picked up when going to relevant jobs.</ATS.TakeAsToolDesc>
@@ -21,4 +21,9 @@
 	<ATS.FirstCombatWeaponChoice>Main combat mode: </ATS.FirstCombatWeaponChoice>
 	<ATS.Range>Range</ATS.Range>
 	<ATS.Melee>Melee</ATS.Melee>
+	<ATS.None>None</ATS.None>
+	<ATS.ToggleEquipSound>Toggle equip sound</ATS.ToggleEquipSound>
+	<ATS.ToggleAutoMelee>Toggle auto melee</ATS.ToggleAutoMelee>
+	<ATS.SelectAll>All</ATS.SelectAll>
+
 </LanguageData>

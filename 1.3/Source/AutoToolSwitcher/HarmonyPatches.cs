@@ -55,9 +55,39 @@ namespace AutoToolSwitcher
                 catch { }
             }
 
+            var equipWeaponMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_Equip))
+                .FirstOrDefault(x => x.Name.Contains("<MakeNewToils>") && x.ReturnType == typeof(void) && x.GetParameters().Length == 0);
+            harmony.Patch(equipWeaponMethod, transpiler: new HarmonyMethod(AccessTools.Method(typeof(HarmonyPatches), "EquipWeaponTranspiler")));
+            
             harmony.PatchAll();
         }
 
+        public static IEnumerable<CodeInstruction> EquipWeaponTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilg)
+        {
+            var shouldSkip = AccessTools.Method(typeof(HarmonyPatches), "IsSoundEquipAllowed");
+            var codes = instructions.ToList();
+            for (var i = 0; i < codes.Count; i++)
+            {
+                if (i > 0 && codes[i - 1].opcode == OpCodes.Brfalse_S && codes[i].opcode == OpCodes.Ldloc_0)
+                {
+                    yield return new CodeInstruction(OpCodes.Ldarg_0);
+                    yield return new CodeInstruction(OpCodes.Call, shouldSkip);
+                    yield return new CodeInstruction(OpCodes.Brfalse_S, codes[i - 1].operand);
+                }
+                yield return codes[i];
+            }
+        }
+
+        private static bool IsSoundEquipAllowed(JobDriver_Equip jobDriver_Equip)
+        {
+            var pawn = jobDriver_Equip.pawn;
+            var policy = pawn.GetCurrentToolPolicy();
+            if (policy != null && !policy.toggleEquipSound)
+            {
+                return false;
+            }
+            return true;
+        }
         public static void WorkTagIsDisabledPostfix(WorkTags w, ref Pawn __instance, ref bool __result)
         {
             if (!__result && w != WorkTags.Violent)
@@ -219,6 +249,11 @@ namespace AutoToolSwitcher
             {
                 if (target != null && target.Position.DistanceTo(pawn.Position) <= 1.42f)
                 {
+                    var toolPolicy = pawn.GetCurrentToolPolicy();
+                    if (toolPolicy != null && !toolPolicy.toggleAutoMelee)
+                    {
+                        return;
+                    }
                     if ((pawn.equipment?.Primary?.def.IsRangedWeapon ?? false))
                     {
                         var meleeWeapon = WeaponSearchUtility.PickBestWeapon(pawn, meleeValidator);
@@ -233,7 +268,7 @@ namespace AutoToolSwitcher
                     var toolPolicy = pawn.GetCurrentToolPolicy();
                     if (toolPolicy != null)
                     {
-                        if (toolPolicy.rangeDefault)
+                        if (toolPolicy.combatMode == CombatMode.Range)
                         {
                             var rangeWeapon = WeaponSearchUtility.PickBestWeapon(pawn, rangeValidator);
                             if (rangeWeapon != null && (pawn.equipment.Primary is null || (!rangeValidator(pawn.equipment.Primary)
@@ -242,7 +277,7 @@ namespace AutoToolSwitcher
                                 EquipTool(pawn, rangeWeapon);
                             }
                         }
-                        else
+                        else if (toolPolicy.combatMode == CombatMode.Melee)
                         {
                             var meleeWeapon = WeaponSearchUtility.PickBestWeapon(pawn, meleeValidator);
                             if (meleeWeapon != null && (pawn.equipment.Primary is null || (!meleeValidator(pawn.equipment.Primary) ||
