@@ -18,7 +18,7 @@
 	<ATS.TakeAsTool>Take as tool</ATS.TakeAsTool>
 	<ATS.TakeAsToolDesc>Put in inventory as a tool. It will be picked up when going to relevant jobs.</ATS.TakeAsToolDesc>
 	<ATS.ToolPolicyName>Tool policy name: </ATS.ToolPolicyName>
-	<ATS.FirstCombatWeaponChoice>Main combat mode: </ATS.FirstCombatWeaponChoice>
+	<ATS.FirstCombatWeaponChoice>Combat Stance: </ATS.FirstCombatWeaponChoice>
 	<ATS.Range>Range</ATS.Range>
 	<ATS.Melee>Melee</ATS.Melee>
 	<ATS.None>None</ATS.None>

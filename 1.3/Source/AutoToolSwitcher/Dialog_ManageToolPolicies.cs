@@ -385,11 +385,11 @@ namespace AutoToolSwitcher
 
 
 			var selectedPolicy = SelectedPolicy;
-			var firstWeaponType = new Rect(rect6.xMax + 10, rect6.y, 150, 30);
+			var firstWeaponType = new Rect(rect6.xMax + 10, rect6.y, 130, 30);
 			Text.Anchor = TextAnchor.MiddleCenter;
 			Widgets.Label(firstWeaponType, "ATS.FirstCombatWeaponChoice".Translate());
 			Text.Anchor = TextAnchor.UpperLeft;
-			if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 10, rect6.y, 80f, 30f), "ATS.Range".Translate(), selectedPolicy.combatMode == CombatMode.Range))
+			if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax, rect6.y, 80f, 30f), "ATS.Range".Translate(), selectedPolicy.combatMode == CombatMode.Range))
 			{
 				selectedPolicy.combatMode = CombatMode.Range;
 			}
