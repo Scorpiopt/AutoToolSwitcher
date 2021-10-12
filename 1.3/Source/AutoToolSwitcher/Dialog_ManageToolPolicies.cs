@@ -385,19 +385,19 @@ namespace AutoToolSwitcher
 
 
 			var selectedPolicy = SelectedPolicy;
-			var firstWeaponType = new Rect(rect6.xMax + 10, rect6.y, 130, 30);
+			var firstWeaponType = new Rect(rect6.xMax + 10, rect6.y, 120, 30);
 			Text.Anchor = TextAnchor.MiddleCenter;
 			Widgets.Label(firstWeaponType, "ATS.FirstCombatWeaponChoice".Translate());
 			Text.Anchor = TextAnchor.UpperLeft;
-			if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax, rect6.y, 80f, 30f), "ATS.Range".Translate(), selectedPolicy.combatMode == CombatMode.Range))
+			if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax, rect6.y, 75f, 30f), "ATS.Range".Translate(), selectedPolicy.combatMode == CombatMode.Range))
 			{
 				selectedPolicy.combatMode = CombatMode.Range;
 			}
-			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 100f, rect6.y, 80f, 30f), "ATS.Melee".Translate(), selectedPolicy.combatMode == CombatMode.Melee))
+			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 90f, rect6.y, 75f, 30f), "ATS.Melee".Translate(), selectedPolicy.combatMode == CombatMode.Melee))
 			{
 				selectedPolicy.combatMode = CombatMode.Melee;
 			}
-			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 200f, rect6.y, 80f, 30f), "ATS.None".Translate(), selectedPolicy.combatMode == CombatMode.None))
+			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 180f, rect6.y, 75f, 30f), "ATS.None".Translate(), selectedPolicy.combatMode == CombatMode.None))
 			{
 				selectedPolicy.combatMode = CombatMode.None;
 			}
