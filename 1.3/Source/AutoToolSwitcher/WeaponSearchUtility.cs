@@ -34,11 +34,11 @@ namespace AutoToolSwitcher
 			}
 			return true;
 		}
-		public static ThingWithComps PickBestWeapon(Pawn pawn, Predicate<ThingWithComps> validator)
+		public static ThingWithComps PickBestWeapon(Pawn pawn, Func<Pawn, ThingWithComps, bool> validator)
         {
 			ThingWithComps thing = null;
 			float maxValue = 0f;
-			List<ThingWithComps> weapons = pawn.inventory.innerContainer.InnerListForReading.OfType<ThingWithComps>().Where(x => validator(x)).ToList();
+			List<ThingWithComps> weapons = pawn.inventory.innerContainer.InnerListForReading.OfType<ThingWithComps>().Where(x => validator(pawn, x)).ToList();
 			for (int j = 0; j < weapons.Count; j++)
 			{
 				ThingWithComps weapon = weapons[j];
@@ -94,11 +94,16 @@ namespace AutoToolSwitcher
 				{
 					return false;
 				}
+
 				if (ToolSearchUtility.fireExtinguishers.Contains(t.def))
                 {
 					return false;
                 }
-				if (!ToolSearchUtility.baseToolValidator(pawn, t, policy))
+				if (ModCompatUtility.combatExtendedLoaded && !ModCompatUtility.IsUsableForCE(pawn, t))
+				{
+					return false;
+				}
+				if (!ToolSearchUtility.baseEquipmentValidator(pawn, t, policy))
                 {
 					return false;
 				}
@@ -111,7 +116,7 @@ namespace AutoToolSwitcher
 				{
 					return false;
 				}
-				if (!ToolSearchUtility.baseToolValidator(pawn, t, policy))
+				if (!ToolSearchUtility.baseEquipmentValidator(pawn, t, policy))
 				{
 					return false;
 				}
@@ -133,20 +138,21 @@ namespace AutoToolSwitcher
 
 			Thing thing = null;
 			float maxValue = 0f;
-			List<Thing> list = pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.Weapon);
 
-			List<Thing> weapons = pawn.inventory.innerContainer.InnerListForReading.ToList();
-			list.AddRange(weapons);
-			if (pawn.equipment.Primary != null)
+			List<Thing> list = new List<Thing>();
+			list.AddRange(pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.Weapon));
+			list.AddRange(pawn.inventory.innerContainer.ToList());
+			var primary = pawn.equipment.Primary;
+			if (primary != null)
 			{
-				list.Add(pawn.equipment.Primary);
+				list.Add(primary);
 			}
+			
 			Dictionary<Thing, float> weaponsByScores = new Dictionary<Thing, float>();
 			for (int j = 0; j < list.Count; j++)
 			{
 				Thing weapon = list[j];
-				if (mainValidator(weapon) && !weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
-						&& EquipmentUtility.CanEquip(weapon, pawn) && pawn.CanReserveAndReach(weapon, PathEndMode.OnCell, pawn.NormalMaxDanger()))
+				if (mainValidator(weapon) && !weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn)) && EquipmentUtility.CanEquip(weapon, pawn) && pawn.CanReserveAndReach(weapon, PathEndMode.OnCell, pawn.NormalMaxDanger()))
 				{
 					float weaponScore = WeaponScoreGain(weapon);
 					weaponsByScores[weapon] = weaponScore;
@@ -157,9 +163,9 @@ namespace AutoToolSwitcher
 					}
 				}
 			}
-
+			
 			if (thing != null)
-            {
+			{
 				secondaryWeapon = weaponsByScores.OrderByDescending(x => x.Value).FirstOrDefault(x => secondaryWeaponValidator(x.Key) && x.Key.def.IsRangedWeapon != thing.def.IsRangedWeapon).Key;
 			}
 			return thing;

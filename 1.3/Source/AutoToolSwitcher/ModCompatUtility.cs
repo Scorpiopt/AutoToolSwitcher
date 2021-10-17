@@ -27,6 +27,16 @@ namespace AutoToolSwitcher
             }
         }
 
+        public static bool IsUsableForCE(Pawn user, Thing weapon)
+        {
+            var comp = weapon.TryGetComp<CombatExtended.CompAmmoUser>();
+            if (comp != null && comp.UseAmmo && !comp.HasAmmoOrMagazine && !comp.TryFindAmmoInInventory(out _))
+            {
+                var ammoDef = comp.SelectedAmmo;
+                return !user.Map.listerThings.ThingsOfDef(ammoDef).Any();
+            }
+            return true;
+        }
         private static void DoCEPatches()
         {
             var holdTracker = AccessTools.TypeByName("CombatExtended.Utility_HoldTracker");

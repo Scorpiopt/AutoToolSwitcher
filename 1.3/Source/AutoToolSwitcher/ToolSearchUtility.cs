@@ -45,7 +45,7 @@ namespace AutoToolSwitcher
             return toolDefs.Contains(thingDef) || fireExtinguishers.Contains(thingDef);
         }
 
-        public static Func<Pawn, Thing, ToolPolicy, bool> baseToolValidator = delegate (Pawn p, Thing x, ToolPolicy policy)
+        public static Func<Pawn, Thing, ToolPolicy, bool> baseEquipmentValidator = delegate (Pawn p, Thing x, ToolPolicy policy)
         {
             if (policy != null && !policy.SatisfiedBy(x))
             {
@@ -58,7 +58,7 @@ namespace AutoToolSwitcher
             return true;
         };
 
-        private static Func<Pawn, Thing, bool> toolValidator = delegate (Pawn p, Thing x)
+        private static Func<Pawn, Thing, bool> baseToolValidator = delegate (Pawn p, Thing x)
         {
             if (!toolDefs.Contains(x.def))
             {
@@ -69,7 +69,7 @@ namespace AutoToolSwitcher
             {
                 return false;
             }
-            if (!baseToolValidator(p, x, policy))
+            if (!baseEquipmentValidator(p, x, policy))
             {
                 return false;
             }
@@ -87,7 +87,7 @@ namespace AutoToolSwitcher
             {
                 return false;
             }
-            if (!baseToolValidator(p, x, policy))
+            if (!baseEquipmentValidator(p, x, policy))
             {
                 return false;
             }
@@ -136,7 +136,7 @@ namespace AutoToolSwitcher
             }
             else
             {
-                return FindToolForInt(pawn, new SkillJob(skillDef, job), toolValidator, toolDefs, out toolAction);
+                return FindToolForInt(pawn, new SkillJob(skillDef, job), baseToolValidator, toolDefs, out toolAction);
             }
         }
         private static ThingWithComps FindToolForInt(Pawn pawn, SkillJob skillJob, Func<Pawn, Thing, bool> validator, HashSet<ThingDef> toolThingDefs, out ToolAction toolAction)

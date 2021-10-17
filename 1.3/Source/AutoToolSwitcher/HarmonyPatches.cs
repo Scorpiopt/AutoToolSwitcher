@@ -58,7 +58,7 @@ namespace AutoToolSwitcher
             var equipWeaponMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_Equip))
                 .FirstOrDefault(x => x.Name.Contains("<MakeNewToils>") && x.ReturnType == typeof(void) && x.GetParameters().Length == 0);
             harmony.Patch(equipWeaponMethod, transpiler: new HarmonyMethod(AccessTools.Method(typeof(HarmonyPatches), "EquipWeaponTranspiler")));
-            
+
             harmony.PatchAll();
         }
 
@@ -145,31 +145,6 @@ namespace AutoToolSwitcher
                     job.def.neverShowWeapon = __state.Value.neverShowWeapon;
                 }
             }
-
-            // failed transpiler attempt here
-            //public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilg)
-            //{
-            //    var neverShowWeaponField = AccessTools.Field(typeof(JobDef), "neverShowWeapon");
-            //    var pawnField = AccessTools.Field(typeof(PawnRenderer), "pawn");
-            //    var isUsingTool = AccessTools.Method(typeof(HarmonyPatches), "IsUsingTool");
-            //    Label label = ilg.DefineLabel();
-            //    var codes = instructions.ToList();
-            //    for (var i = 0; i < codes.Count; i++)
-            //    {
-            //        var instr = codes[i];
-            //        yield return instr;
-            //        if (instr.OperandIs(neverShowWeaponField))
-            //        {
-            //            codes[i].labels.Add(label);
-            //
-            //            yield return new CodeInstruction(OpCodes.Ldarg_0);
-            //            yield return new CodeInstruction(OpCodes.Ldfld, pawnField);
-            //            yield return new CodeInstruction(OpCodes.Call, isUsingTool);
-            //            yield return new CodeInstruction(OpCodes.And, null);
-            //            yield return new CodeInstruction(OpCodes.Brfalse_S, label);
-            //        }
-            //    }
-            //}
         }
 
         [HarmonyPatch(typeof(JobMaker), "MakeJob", new Type[] { typeof(JobDef), typeof(LocalTargetInfo) })]
@@ -199,7 +174,7 @@ namespace AutoToolSwitcher
         [HarmonyPatch(typeof(Pawn_MeleeVerbs), "TryMeleeAttack")]
         public static class Patch_TryMeleeAttackVerb
         {
-            public static Predicate<ThingWithComps> meleeValidator = delegate (ThingWithComps t)
+            public static Func<Pawn, ThingWithComps, bool> meleeValidator = delegate (Pawn pawn, ThingWithComps t)
             {
                 if (!t.def.IsWeapon)
                 {
@@ -220,7 +195,8 @@ namespace AutoToolSwitcher
 
                 return true;
             };
-            public static Predicate<ThingWithComps> rangeValidator = delegate (ThingWithComps t)
+
+            public static Func<Pawn, ThingWithComps, bool> rangeValidator = delegate (Pawn pawn, ThingWithComps t)
             {
                 if (!t.def.IsWeapon)
                 {
@@ -235,6 +211,10 @@ namespace AutoToolSwitcher
                     return false;
                 }
                 if (t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
+                {
+                    return false;
+                }
+                if (ModCompatUtility.combatExtendedLoaded && !ModCompatUtility.IsUsableForCE(pawn, t))
                 {
                     return false;
                 }
@@ -271,7 +251,7 @@ namespace AutoToolSwitcher
                         if (toolPolicy.combatMode == CombatMode.Range)
                         {
                             var rangeWeapon = WeaponSearchUtility.PickBestWeapon(pawn, rangeValidator);
-                            if (rangeWeapon != null && (pawn.equipment.Primary is null || (!rangeValidator(pawn.equipment.Primary)
+                            if (rangeWeapon != null && (pawn.equipment.Primary is null || (!rangeValidator(pawn, pawn.equipment.Primary)
                                 || rangeWeapon.WeaponScoreGain() > pawn.equipment.Primary.WeaponScoreGain())))
                             {
                                 EquipTool(pawn, rangeWeapon);
@@ -280,7 +260,7 @@ namespace AutoToolSwitcher
                         else if (toolPolicy.combatMode == CombatMode.Melee)
                         {
                             var meleeWeapon = WeaponSearchUtility.PickBestWeapon(pawn, meleeValidator);
-                            if (meleeWeapon != null && (pawn.equipment.Primary is null || (!meleeValidator(pawn.equipment.Primary) ||
+                            if (meleeWeapon != null && (pawn.equipment.Primary is null || (!meleeValidator(pawn, pawn.equipment.Primary) ||
                                 meleeWeapon.WeaponScoreGain() > pawn.equipment.Primary.WeaponScoreGain())))
                             {
                                 EquipTool(pawn, meleeWeapon);
@@ -346,7 +326,7 @@ namespace AutoToolSwitcher
                     }
                 }
             }
-
+            
             if (__result is null)
             {
                 var toolPolicy = pawn.GetCurrentToolPolicy();
@@ -356,13 +336,13 @@ namespace AutoToolSwitcher
                     if (primary != null && primary.def.IsTool())
                     {
                         var curPolicy = toolPolicy[primary.def];
-                        if (!curPolicy.equipAsWeapon && !curPolicy.takeAsTool 
+                        if (!curPolicy.equipAsWeapon && !curPolicy.takeAsTool
                             && (!ModCompatUtility.combatExtendedLoaded || !ModCompatUtility.HasActiveInCELoadout(pawn, primary, out _)))
                         {
                             __result = HaulTool(pawn, primary);
                         }
                     }
-
+            
                     if (__result is null && pawn.inventory != null)
                     {
                         var things = pawn.inventory.innerContainer.ToList();
@@ -380,7 +360,7 @@ namespace AutoToolSwitcher
                     }
                 }
             }
-
+            
             if (__result != null)
             {
                 return false;
@@ -584,7 +564,5 @@ namespace AutoToolSwitcher
             }
             return false;
         }
-
-
     }
 }
