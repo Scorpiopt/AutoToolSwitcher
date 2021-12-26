@@ -33,7 +33,10 @@ namespace AutoToolSwitcher
             if (comp != null && comp.UseAmmo && !comp.HasAmmoOrMagazine && !comp.TryFindAmmoInInventory(out _))
             {
                 var ammoDef = comp.SelectedAmmo;
-                return !user.Map.listerThings.ThingsOfDef(ammoDef).Any();
+                if (ammoDef != null)
+                {
+                    return user.Map.listerThings.ThingsOfDef(ammoDef).Any();
+                }
             }
             return true;
         }

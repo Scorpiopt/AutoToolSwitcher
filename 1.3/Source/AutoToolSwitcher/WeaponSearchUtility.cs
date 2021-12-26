@@ -63,86 +63,77 @@ namespace AutoToolSwitcher
 			}
 			return thing;
 		}
+		public static bool MainWeaponValidator(Thing t, Pawn pawn, bool isBrawler, ToolPolicy policy)
+		{
+			if (!t.def.IsWeapon)
+			{
+				return false;
+			}
+			if (t.IsForbidden(pawn))
+			{
+				return false;
+			}
+			if (isBrawler && t.def.IsRangedWeapon)
+			{
+				return false;
+			}
+			if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
+			{
+				return false;
+			}
+			if (t.def.IsRangedWeapon && t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
+			{
+				return false;
+			}
 
+			if (ToolSearchUtility.fireExtinguishers.Contains(t.def))
+			{
+				return false;
+			}
+			if (ModCompatUtility.combatExtendedLoaded && !ModCompatUtility.IsUsableForCE(pawn, t))
+			{
+				return false;
+			}
+			if (!ToolSearchUtility.baseEquipmentValidator(pawn, t, policy))
+			{
+				return false;
+			}
+			return true;
+		}
 
+		public static bool SecondaryWeaponValidator(Pawn pawn, ToolPolicy policy, Thing t)
+		{
+			if (policy != null && !policy[t.def].takeAsSecondary)
+			{
+				return false;
+			}
+			return true;
+		}
+
+		public static bool PreferabilityValidator(bool preferRanged, Thing t)
+		{
+			if (preferRanged && t.def.IsMeleeWeapon)
+			{
+				return false;
+			}
+			if (!preferRanged && t.def.IsRangedWeapon)
+			{
+				return false;
+			}
+			return true;
+		}
 		public static Thing PickBestWeaponFor(Pawn pawn, out Thing secondaryWeapon)
 		{
+			var primary = pawn.equipment?.Primary;
 			bool isBrawler = pawn.story?.traits?.HasTrait(TraitDefOf.Brawler) ?? false;
-			bool preferRanged = !isBrawler && (!pawn.equipment.Primary?.def.IsMeleeWeapon ?? false || pawn.equipment.Primary == null);
+			bool preferRanged = !isBrawler && (!primary?.def.IsMeleeWeapon ?? false || primary == null);
 			secondaryWeapon = null;
 			var policy = pawn.GetCurrentToolPolicy();
-
-			Predicate<Thing> mainValidator = delegate (Thing t)
-			{
-				if (!t.def.IsWeapon)
-				{
-					return false;
-				}
-				if (t.IsForbidden(pawn))
-				{
-					return false;
-				}
-				if (isBrawler && t.def.IsRangedWeapon)
-				{
-					return false;
-				}
-				if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
-				{
-					return false;
-				}
-				if (t.def.IsRangedWeapon && t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
-				{
-					return false;
-				}
-
-				if (ToolSearchUtility.fireExtinguishers.Contains(t.def))
-                {
-					return false;
-                }
-				if (ModCompatUtility.combatExtendedLoaded && !ModCompatUtility.IsUsableForCE(pawn, t))
-				{
-					return false;
-				}
-				if (!ToolSearchUtility.baseEquipmentValidator(pawn, t, policy))
-                {
-					return false;
-				}
-				return true;
-			};
-
-			Predicate<Thing> secondaryWeaponValidator = delegate (Thing t)
-			{
-				if (policy != null && !policy[t.def].takeAsSecondary)
-				{
-					return false;
-				}
-				if (!ToolSearchUtility.baseEquipmentValidator(pawn, t, policy))
-				{
-					return false;
-				}
-				return true;
-			};
-
-			Predicate<Thing> preferabilityValidator = delegate (Thing t)
-			{
-				if (preferRanged && t.def.IsMeleeWeapon)
-				{
-					return false;
-				}
-				if (!preferRanged && t.def.IsRangedWeapon)
-				{
-					return false;
-				}
-				return true;
-			};
-
 			Thing thing = null;
 			float maxValue = 0f;
-
 			List<Thing> list = new List<Thing>();
 			list.AddRange(pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.Weapon));
-			list.AddRange(pawn.inventory.innerContainer.ToList());
-			var primary = pawn.equipment.Primary;
+			list.AddRange(pawn.inventory.innerContainer.Where(x => x.def.IsWeapon).ToList());
 			if (primary != null)
 			{
 				list.Add(primary);
@@ -152,11 +143,14 @@ namespace AutoToolSwitcher
 			for (int j = 0; j < list.Count; j++)
 			{
 				Thing weapon = list[j];
-				if (mainValidator(weapon) && !weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn)) && EquipmentUtility.CanEquip(weapon, pawn) && pawn.CanReserveAndReach(weapon, PathEndMode.OnCell, pawn.NormalMaxDanger()))
+				var policyEntry = policy[weapon.def];
+				if ((policyEntry.equipAsWeapon || policyEntry.takeAsSecondary) && MainWeaponValidator(weapon, pawn, isBrawler, policy)
+					&& !weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
+					&& EquipmentUtility.CanEquip(weapon, pawn))
 				{
 					float weaponScore = WeaponScoreGain(weapon);
 					weaponsByScores[weapon] = weaponScore;
-					if (policy[weapon.def].equipAsWeapon && !(weaponScore < 0.05f) && !(weaponScore < maxValue) && preferabilityValidator(weapon))
+					if (policyEntry.equipAsWeapon && !(weaponScore < 0.05f) && !(weaponScore < maxValue) && PreferabilityValidator(preferRanged, weapon))
 					{
 						thing = weapon;
 						maxValue = weaponScore;
@@ -166,7 +160,7 @@ namespace AutoToolSwitcher
 			
 			if (thing != null)
 			{
-				secondaryWeapon = weaponsByScores.OrderByDescending(x => x.Value).FirstOrDefault(x => secondaryWeaponValidator(x.Key) && x.Key.def.IsRangedWeapon != thing.def.IsRangedWeapon).Key;
+				secondaryWeapon = weaponsByScores.OrderByDescending(x => x.Value).FirstOrDefault(x => SecondaryWeaponValidator(pawn, policy, x.Key) && x.Key.def.IsRangedWeapon != thing.def.IsRangedWeapon).Key;
 			}
 			return thing;
 		}
