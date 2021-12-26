@@ -193,5 +193,90 @@ namespace AutoToolSwitcher
 			}
 			return 0f;
 		}
+
+		public static Job SearchForWeapon(Pawn pawn)
+		{
+			if (pawn.CanLookForWeapon())
+			{
+				var weapon = WeaponSearchUtility.PickBestWeaponFor(pawn, out var secondaryWeapon);
+				if (weapon != null || secondaryWeapon != null)
+				{
+					if (weapon != null && weapon.def != pawn.equipment.Primary?.def)
+					{
+						if (pawn.inventory.innerContainer.Contains(weapon))
+						{
+							HarmonyPatches.EquipTool(pawn, weapon as ThingWithComps);
+							return null;
+						}
+						else
+						{
+							return JobMaker.MakeJob(JobDefOf.Equip, weapon);
+						}
+					}
+					else if (secondaryWeapon != null && !pawn.inventory.innerContainer.Any(x => x.def == secondaryWeapon.def))
+					{
+						if (pawn.equipment.Primary == secondaryWeapon)
+						{
+							if (secondaryWeapon.holdingOwner != null)
+							{
+								secondaryWeapon.holdingOwner.Remove(secondaryWeapon);
+							}
+							pawn.inventory.TryAddItemNotForSale(secondaryWeapon);
+						}
+						else
+						{
+							var job = JobMaker.MakeJob(JobDefOf.TakeInventory, secondaryWeapon);
+							job.count = 1;
+							return job;
+						}
+					}
+				}
+			}
+
+			var toolPolicy = pawn.GetCurrentToolPolicy();
+			if (toolPolicy != null)
+			{
+				var primary = pawn.equipment?.Primary;
+				if (primary != null && primary.def.IsTool())
+				{
+					var curPolicy = toolPolicy[primary.def];
+					if (!curPolicy.equipAsWeapon && !curPolicy.takeAsTool
+						&& (!ModCompatUtility.combatExtendedLoaded || !ModCompatUtility.HasActiveInCELoadout(pawn, primary, out _)))
+					{
+						return HaulTool(pawn, primary);
+					}
+				}
+
+				if (pawn.inventory != null)
+				{
+					var things = pawn.inventory.innerContainer.ToList();
+					foreach (var thing in things)
+					{
+						if (thing.def.IsTool())
+						{
+							var curPolicy = toolPolicy[thing.def];
+							if (!curPolicy.takeAsTool && (!ModCompatUtility.combatExtendedLoaded || !ModCompatUtility.HasActiveInCELoadout(pawn, thing, out _)))
+							{
+								return HaulTool(pawn, thing);
+							}
+						}
+					}
+				}
+			}
+			return null;
+		}
+
+		private static Job HaulTool(Pawn pawn, Thing thing)
+		{
+			Thing droppedThing;
+			if (thing.holdingOwner.TryDrop(thing, pawn.Position, pawn.Map, ThingPlaceMode.Near, 1, out droppedThing))
+			{
+				if (droppedThing != null)
+				{
+					return HaulAIUtility.HaulToStorageJob(pawn, droppedThing);
+				}
+			}
+			return null;
+		}
 	}
 }

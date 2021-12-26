@@ -26,5 +26,5 @@
 	<ATS.ToggleAutoMelee>Toggle auto melee</ATS.ToggleAutoMelee>
 	<ATS.SelectAll>All</ATS.SelectAll>
 	<ATS.MinQualityForWeaponsTools>Minimum required quality for tools/weapons: </ATS.MinQualityForWeaponsTools>
-
+	<ATS.ForceRefresh>Force refresh</ATS.ForceRefresh>
 </LanguageData>

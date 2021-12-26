@@ -292,75 +292,7 @@ namespace AutoToolSwitcher
             {
                 return false;
             }
-            if (pawn.CanLookForWeapon())
-            {
-                var weapon = WeaponSearchUtility.PickBestWeaponFor(pawn, out var secondaryWeapon);
-                if (weapon != null || secondaryWeapon != null)
-                {
-                    if (weapon != null && weapon.def != pawn.equipment.Primary?.def)
-                    {
-                        if (pawn.inventory.innerContainer.Contains(weapon))
-                        {
-                            EquipTool(pawn, weapon as ThingWithComps);
-                        }
-                        else
-                        {
-                            __result = JobMaker.MakeJob(JobDefOf.Equip, weapon);
-                        }
-                    }
-                    else if (secondaryWeapon != null && !pawn.inventory.innerContainer.Any(x => x.def == secondaryWeapon.def))
-                    {
-                        if (pawn.equipment.Primary == secondaryWeapon)
-                        {
-                            if (secondaryWeapon.holdingOwner != null)
-                            {
-                                secondaryWeapon.holdingOwner.Remove(secondaryWeapon);
-                            }
-                            pawn.inventory.TryAddItemNotForSale(secondaryWeapon);
-                        }
-                        else
-                        {
-                            __result = JobMaker.MakeJob(JobDefOf.TakeInventory, secondaryWeapon);
-                            __result.count = 1;
-                        }
-                    }
-                }
-            }
-            
-            if (__result is null)
-            {
-                var toolPolicy = pawn.GetCurrentToolPolicy();
-                if (toolPolicy != null)
-                {
-                    var primary = pawn.equipment?.Primary;
-                    if (primary != null && primary.def.IsTool())
-                    {
-                        var curPolicy = toolPolicy[primary.def];
-                        if (!curPolicy.equipAsWeapon && !curPolicy.takeAsTool
-                            && (!ModCompatUtility.combatExtendedLoaded || !ModCompatUtility.HasActiveInCELoadout(pawn, primary, out _)))
-                        {
-                            __result = HaulTool(pawn, primary);
-                        }
-                    }
-            
-                    if (__result is null && pawn.inventory != null)
-                    {
-                        var things = pawn.inventory.innerContainer.ToList();
-                        foreach (var thing in things)
-                        {
-                            if (thing.def.IsTool())
-                            {
-                                var curPolicy = toolPolicy[thing.def];
-                                if (!curPolicy.takeAsTool && (!ModCompatUtility.combatExtendedLoaded || !ModCompatUtility.HasActiveInCELoadout(pawn, thing, out _)))
-                                {
-                                    __result = HaulTool(pawn, thing);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            
+            __result = WeaponSearchUtility.SearchForWeapon(pawn);
             if (__result != null)
             {
                 return false;
@@ -368,18 +300,6 @@ namespace AutoToolSwitcher
             return true;
         }
 
-        private static Job HaulTool(Pawn pawn, Thing thing)
-        {
-            Thing droppedThing;
-            if (thing.holdingOwner.TryDrop(thing, pawn.Position, pawn.Map, ThingPlaceMode.Near, 1, out droppedThing))
-            {
-                if (droppedThing != null)
-                {
-                    return HaulAIUtility.HaulToStorageJob(pawn, droppedThing);
-                }
-            }
-            return null;
-        }
         private static HashSet<JobDef> ignoredJobs = new HashSet<JobDef>
         {
             JobDefOf.GotoWander,
@@ -506,7 +426,7 @@ namespace AutoToolSwitcher
             catch { }
         }
 
-        private static void EquipTool(Pawn pawn, ThingWithComps tool)
+        public static void EquipTool(Pawn pawn, ThingWithComps tool)
         {
             if (pawn.equipment.Primary != null && pawn.inventory != null)
             {

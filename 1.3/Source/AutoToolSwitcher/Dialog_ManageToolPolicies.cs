@@ -48,7 +48,6 @@ namespace AutoToolSwitcher
 		{
 			forcePause = true;
 			doCloseX = true;
-			doCloseButton = true;
 			closeOnClickedOutside = false;
 			absorbInputAroundWindow = false;
 			SelectedPolicy = selectedAssignedTools;
@@ -111,7 +110,6 @@ namespace AutoToolSwitcher
 			Widgets.Label(nameRect, "ATS.ToolPolicyName".Translate());
 			Text.Anchor = TextAnchor.UpperLeft;
 
-
 			Rect rect4 = new Rect(0f, 40f, inRect.width, inRect.height - Window.CloseButSize.y).ContractedBy(10f);
 			if (SelectedPolicy == null)
 			{
@@ -137,6 +135,31 @@ namespace AutoToolSwitcher
 			}
 			DoTogglesAndSliders(inRect);
 			Text.Font = GameFont.Small;
+
+			Text.Font = GameFont.Small;
+			var x = inRect.width / 2f - CloseButSize.x / 2f;
+			var y = inRect.height - 50f;
+
+			if (Widgets.ButtonText(new Rect(x - CloseButSize.x - 10, y, CloseButSize.x, CloseButSize.y), "ATS.ForceRefresh".Translate()))
+			{
+				foreach (var kvp in GameComponent_ToolTracker.Instance.trackers)
+                {
+					var pawn = kvp.Key;
+					var tracker = kvp.Value;
+					if (pawn.IsColonistPlayerControlled && pawn.Spawned)
+                    {
+						var job = WeaponSearchUtility.SearchForWeapon(pawn);
+						if (job != null)
+                        {
+							pawn.jobs.TryTakeOrderedJob(job);
+                        }
+                    }
+                }
+			}
+			if (Widgets.ButtonText(new Rect(x, y, CloseButSize.x, CloseButSize.y), "CloseButton".Translate()))
+			{
+				Close();
+			}
 		}
 		private void DoTogglesAndSliders(Rect rect)
         {
