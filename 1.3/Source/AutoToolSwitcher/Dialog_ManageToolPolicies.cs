@@ -146,7 +146,7 @@ namespace AutoToolSwitcher
                 {
 					var pawn = kvp.Key;
 					var tracker = kvp.Value;
-					if (pawn.IsColonistPlayerControlled && pawn.Spawned)
+					if (SelectedPolicy != null && tracker?.CurrentPolicy == SelectedPolicy && pawn.IsColonistPlayerControlled && pawn.Spawned)
                     {
 						var job = WeaponSearchUtility.SearchForWeapon(pawn);
 						if (job != null)
