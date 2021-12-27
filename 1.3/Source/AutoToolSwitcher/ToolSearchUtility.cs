@@ -147,11 +147,11 @@ namespace AutoToolSwitcher
             var outsideThings = new List<ThingWithComps>();
             foreach (var def in toolThingDefs)
             {
-                foreach (var tool in pawn.Map.listerThings.ThingsOfDef(def).OfType<ThingWithComps>())
+                foreach (var tool in pawn.Map.listerThings.ThingsOfDef(def))
                 {
                     if (pawn.equipment.Primary?.def != tool.def && !pawn.inventory.innerContainer.Any(x => x.def == tool.def) && validator(pawn, tool))
                     {
-                        outsideThings.Add(tool);
+                        outsideThings.Add(tool as ThingWithComps);
                     }
                 }
             }
