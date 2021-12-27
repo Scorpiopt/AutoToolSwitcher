@@ -255,7 +255,7 @@ namespace AutoToolSwitcher
 						if (thing.def.IsTool())
 						{
 							var curPolicy = toolPolicy[thing.def];
-							if (!curPolicy.takeAsTool && (!ModCompatUtility.combatExtendedLoaded || !ModCompatUtility.HasActiveInCELoadout(pawn, thing, out _)))
+							if (!curPolicy.takeAsTool && !curPolicy.takeAsSecondary && (!ModCompatUtility.combatExtendedLoaded || !ModCompatUtility.HasActiveInCELoadout(pawn, thing, out _)))
 							{
 								return HaulTool(pawn, thing);
 							}
