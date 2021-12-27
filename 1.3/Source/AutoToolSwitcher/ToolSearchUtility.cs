@@ -149,7 +149,7 @@ namespace AutoToolSwitcher
             {
                 foreach (var tool in pawn.Map.listerThings.ThingsOfDef(def).OfType<ThingWithComps>())
                 {
-                    if (validator(pawn, tool))
+                    if (pawn.equipment.Primary?.def != tool.def && !pawn.inventory.innerContainer.Any(x => x.def == tool.def) && validator(pawn, tool))
                     {
                         outsideThings.Add(tool);
                     }
@@ -192,7 +192,7 @@ namespace AutoToolSwitcher
                         && (!inventoryMaxScore.HasValue || outsideMaxScore.Value > inventoryMaxScore.Value))
                     {
                         var tools = outsideThingsScored[outsideMaxScore.Value];
-                        var tool = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, tools, PathEndMode.OnCell, TraverseParms.For(pawn),
+                        var tool = GenClosest.ClosestThing_Global_Reachable(pawn.Position, pawn.Map, tools, PathEndMode.OnCell, TraverseParms.For(pawn), 
                             9999, (Thing x) => !x.IsForbidden(pawn)) as ThingWithComps;
                         if (tool != null)
                         {
