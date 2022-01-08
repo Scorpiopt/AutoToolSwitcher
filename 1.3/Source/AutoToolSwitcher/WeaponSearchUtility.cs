@@ -67,35 +67,50 @@ namespace AutoToolSwitcher
 		{
 			if (!t.def.IsWeapon)
 			{
+				Log.Message("False 1");
 				return false;
 			}
 			if (t.IsForbidden(pawn))
 			{
+				Log.Message("False 2");
+
 				return false;
 			}
 			if (isBrawler && t.def.IsRangedWeapon)
 			{
+				Log.Message("False 3");
+
 				return false;
 			}
 			if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
 			{
+				Log.Message("False 4");
+
 				return false;
 			}
 			if (t.def.IsRangedWeapon && t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
 			{
+				Log.Message("False 5");
+
 				return false;
 			}
 
 			if (ToolSearchUtility.fireExtinguishers.Contains(t.def))
 			{
+				Log.Message("False 6");
+
 				return false;
 			}
 			if (ModCompatUtility.combatExtendedLoaded && !ModCompatUtility.IsUsableForCE(pawn, t))
 			{
+				Log.Message("False 7");
+
 				return false;
 			}
 			if (!ToolSearchUtility.baseEquipmentValidator(pawn, t, policy))
 			{
+				Log.Message("False 8");
+
 				return false;
 			}
 			return true;
@@ -144,10 +159,13 @@ namespace AutoToolSwitcher
 			{
 				Thing weapon = list[j];
 				var policyEntry = policy[weapon.def];
+				Log.Message("Checking weapon: " + weapon + " - " + (policyEntry.equipAsWeapon || policyEntry.takeAsSecondary) 
+					+ " - " + MainWeaponValidator(weapon, pawn, isBrawler, policy) + " policy: " + policy.label);
 				if ((policyEntry.equipAsWeapon || policyEntry.takeAsSecondary) && MainWeaponValidator(weapon, pawn, isBrawler, policy)
 					&& !weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
 					&& EquipmentUtility.CanEquip(weapon, pawn))
 				{
+					Log.Message("Can look into " + weapon);
 					float weaponScore = WeaponScoreGain(weapon);
 					weaponsByScores[weapon] = weaponScore;
 					if (policyEntry.equipAsWeapon && !(weaponScore < 0.05f) && !(weaponScore < maxValue) && PreferabilityValidator(preferRanged, weapon))
@@ -198,7 +216,8 @@ namespace AutoToolSwitcher
 		{
 			if (pawn.CanLookForWeapon())
 			{
-				var weapon = WeaponSearchUtility.PickBestWeaponFor(pawn, out var secondaryWeapon);
+				var weapon = PickBestWeaponFor(pawn, out var secondaryWeapon);
+				Log.Message("Checking: " + weapon + " for " + pawn);
 				if (weapon != null || secondaryWeapon != null)
 				{
 					if (weapon != null && weapon.def != pawn.equipment.Primary?.def)

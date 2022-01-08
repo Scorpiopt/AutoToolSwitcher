@@ -49,10 +49,12 @@ namespace AutoToolSwitcher
         {
             if (policy != null && !policy.SatisfiedBy(x))
             {
+                Log.Message("Not satisfied 1");
                 return false;
             }
             if (!p.CanReserveAndReach(x, PathEndMode.OnCell, Danger.Deadly))
             {
+                Log.Message("Not satisfied 2");
                 return false;
             }
             return true;

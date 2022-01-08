@@ -149,6 +149,7 @@ namespace AutoToolSwitcher
 					if (SelectedPolicy != null && tracker?.CurrentPolicy == SelectedPolicy && pawn.IsColonistPlayerControlled && pawn.Spawned)
                     {
 						var job = WeaponSearchUtility.SearchForWeapon(pawn);
+						Log.Message("Checking: " + pawn + " - " + SelectedPolicy + " job: " + job);
 						if (job != null)
                         {
 							pawn.jobs.TryTakeOrderedJob(job);
