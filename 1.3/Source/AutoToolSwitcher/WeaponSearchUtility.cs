@@ -165,10 +165,11 @@ namespace AutoToolSwitcher
 					&& !weapon.IsBurning() && (!CompBiocodable.IsBiocoded(weapon) || CompBiocodable.IsBiocodedFor(weapon, pawn))
 					&& EquipmentUtility.CanEquip(weapon, pawn))
 				{
-					Log.Message("Can look into " + weapon);
 					float weaponScore = WeaponScoreGain(weapon);
+					Log.Message("Can look into " + weapon + " - score: " + weaponScore);
+					Log.Message("policyEntry.equipAsWeapon: " + policyEntry.equipAsWeapon + " - !(weaponScore < maxValue): " + !(weaponScore < maxValue) + " - PreferabilityValidator(preferRanged, weapon): " + PreferabilityValidator(preferRanged, weapon));
 					weaponsByScores[weapon] = weaponScore;
-					if (policyEntry.equipAsWeapon && !(weaponScore < 0.05f) && !(weaponScore < maxValue) && PreferabilityValidator(preferRanged, weapon))
+					if (policyEntry.equipAsWeapon && !(weaponScore < maxValue) && PreferabilityValidator(preferRanged, weapon))
 					{
 						thing = weapon;
 						maxValue = weaponScore;
