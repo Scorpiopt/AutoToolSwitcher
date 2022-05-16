@@ -363,6 +363,10 @@ namespace AutoToolSwitcher
                     return SkillDefOf.Construction;
                 }
             }
+            if (job.workGiverDef != null)
+            {
+                return job.workGiverDef?.workType?.relevantSkills?.FirstOrDefault();
+            }
             return null;
         }
     }

@@ -27,6 +27,23 @@ namespace AutoToolSwitcher
         public static Harmony harmony;
         static HarmonyPatches()
         {
+            //foreach (var stat in DefDatabase<StatDef>.AllDefs)
+            //{
+            //    if (stat.showOnPawns)
+            //    {
+            //        foreach (var skill in DefDatabase<SkillDef>.AllDefs)
+            //        {
+            //            var statModifier = new StatModifier
+            //            {
+            //                stat = stat,
+            //                value = 1f
+            //            };
+            //            Log.Message(stat.defName + " affects skill: " + skill.defName + " - " + ToolSearchUtility.AffectsSkill(statModifier, skill));
+            //            Log.ResetMessageCount();
+            //        }
+            //    }
+            //}
+
             harmony = new Harmony("AutoToolSwitcher.Mod");
             harmony.Patch(AccessTools.Method(typeof(JobGiver_OptimizeApparel), "TryGiveJob"),
                 new HarmonyMethod(typeof(HarmonyPatches), nameof(TryFindGunJobPrefix)));
