@@ -164,16 +164,19 @@ namespace AutoToolSwitcher
 		}
 		private void DoTogglesAndSliders(Rect rect)
         {
-			var toggleEquipSoundRect = new Rect(rect.x + 10, rect.y + 615, 190, 24);
-			Widgets.CheckboxLabeled(toggleEquipSoundRect, "ATS.ToggleEquipSound".Translate(), ref SelectedPolicy.toggleEquipSound);
-			var toggleAutoMeleeRect = new Rect(toggleEquipSoundRect.x, toggleEquipSoundRect.yMax, toggleEquipSoundRect.width, toggleEquipSoundRect.height);
-			Widgets.CheckboxLabeled(toggleAutoMeleeRect, "ATS.ToggleAutoMelee".Translate(), ref SelectedPolicy.toggleAutoMelee);
+            if (SelectedPolicy != null)
+            {
+				var toggleEquipSoundRect = new Rect(rect.x + 10, rect.y + 615, 190, 24);
+				Widgets.CheckboxLabeled(toggleEquipSoundRect, "ATS.ToggleEquipSound".Translate(), ref SelectedPolicy.toggleEquipSound);
+				var toggleAutoMeleeRect = new Rect(toggleEquipSoundRect.x, toggleEquipSoundRect.yMax, toggleEquipSoundRect.width, toggleEquipSoundRect.height);
+				Widgets.CheckboxLabeled(toggleAutoMeleeRect, "ATS.ToggleAutoMelee".Translate(), ref SelectedPolicy.toggleAutoMelee);
 
-			var minQualitySliderLabel = new Rect(toggleEquipSoundRect.xMax + 300, toggleEquipSoundRect.y, 180, 50);
-			Widgets.Label(minQualitySliderLabel, "ATS.MinQualityForWeaponsTools".Translate());
-			var minQualitySliderRect = new Rect(minQualitySliderLabel.xMax, minQualitySliderLabel.y, 150, 25);
-			SelectedPolicy.minQuality = (QualityCategory)Widgets.HorizontalSlider(minQualitySliderRect, (float)SelectedPolicy.minQuality, 0, 
-				(float)QualityCategory.Legendary, true, SelectedPolicy.minQuality.GetLabel());
+				var minQualitySliderLabel = new Rect(toggleEquipSoundRect.xMax + 300, toggleEquipSoundRect.y, 180, 50);
+				Widgets.Label(minQualitySliderLabel, "ATS.MinQualityForWeaponsTools".Translate());
+				var minQualitySliderRect = new Rect(minQualitySliderLabel.xMax, minQualitySliderLabel.y, 150, 25);
+				SelectedPolicy.minQuality = (QualityCategory)Widgets.HorizontalSlider(minQualitySliderRect, (float)SelectedPolicy.minQuality, 0,
+					(float)QualityCategory.Legendary, true, SelectedPolicy.minQuality.GetLabel());
+			}
 		}
 		public override void PreClose()
 		{
