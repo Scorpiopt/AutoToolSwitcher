@@ -38,7 +38,7 @@ namespace AutoToolSwitcher
         }
 
         private bool cantUseFireExt;
-        protected override IEnumerable<Toil> MakeNewToils()
+        public override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
             Toil beat = new Toil();

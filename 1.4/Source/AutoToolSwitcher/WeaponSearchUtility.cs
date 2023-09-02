@@ -172,11 +172,14 @@ namespace AutoToolSwitcher
 		{
 			if (weapon.def.IsRangedWeapon)
 			{
-				VerbProperties verbProperties = weapon.def.Verbs.FirstOrDefault(x => x.range > 0 && x.defaultProjectile != null);
+				VerbProperties verbProperties = weapon.def.Verbs.FirstOrDefault(x => x.range > 0 
+				&& x.defaultProjectile?.projectile != null);
 				if (verbProperties != null)
 				{
-                    double num = verbProperties.defaultProjectile.projectile.GetDamageAmount(weapon, null) * (float)verbProperties.burstShotCount;
-                    float num2 = (StatExtension.GetStatValue(weapon, StatDefOf.RangedWeapon_Cooldown, true) + verbProperties.warmupTime) * 60f;
+                    double num = verbProperties.defaultProjectile.projectile.GetDamageAmount(weapon, null) 
+						* (float)verbProperties.burstShotCount;
+                    float num2 = (StatExtension.GetStatValue(weapon, StatDefOf.RangedWeapon_Cooldown, true) 
+						+ verbProperties.warmupTime) * 60f;
                     float num3 = verbProperties.burstShotCount * verbProperties.ticksBetweenBurstShots;
                     float num4 = (num2 + num3) / 60f;
                     float dps = (float)Math.Round(num / num4, 2);

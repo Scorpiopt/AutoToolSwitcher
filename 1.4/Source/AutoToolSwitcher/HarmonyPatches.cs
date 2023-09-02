@@ -21,6 +21,7 @@ namespace AutoToolSwitcher
         public static ToolPolicyDef ATS_Unrestricted;
     }
 
+    [HotSwappable]
     [StaticConstructorOnStartup]
     public static class HarmonyPatches
     {
@@ -105,6 +106,7 @@ namespace AutoToolSwitcher
             }
             return true;
         }
+
         public static void WorkTagIsDisabledPostfix(WorkTags w, ref Pawn __instance, ref bool __result)
         {
             if (!__result && w != WorkTags.Violent)
@@ -440,7 +442,10 @@ namespace AutoToolSwitcher
                     __result = list;
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log.Error("Exception found: " + ex);
+            }
         }
 
         public static void EquipTool(Pawn pawn, ThingWithComps tool)
@@ -459,11 +464,7 @@ namespace AutoToolSwitcher
                 if (job != null)
                 {
                     var activeSkill = ToolSearchUtility.GetActiveSkill(job, pawn);
-                    if (activeSkill != null && tool.TryGetScore(new SkillJob(activeSkill, job), out var result) && result != 0)
-                    {
-                        cachedToolsByJobs[job] = tool;
-                    }
-                    else if (tool.TryGetScore(new SkillJob(activeSkill, job), out var result2) && result2 != 0)
+                    if (tool.TryGetScore(new SkillJob(activeSkill, job), out var result) && result != 0)
                     {
                         cachedToolsByJobs[job] = tool;
                     }
@@ -481,14 +482,10 @@ namespace AutoToolSwitcher
             var eq = pawn.equipment?.Primary;
             if (job != null && eq != null)
             {
-                if (!cachedToolsByJobs.TryGetValue(job, out var toolUsed))
+                if (!cachedToolsByJobs.TryGetValue(job, out var toolUsed) || true)
                 {
                     var activeSkill = ToolSearchUtility.GetActiveSkill(job, pawn);
-                    if (activeSkill != null && eq.TryGetScore(new SkillJob(activeSkill, job), out var result) && result != 0)
-                    {
-                        cachedToolsByJobs[job] = toolUsed = eq;
-                    }
-                    else if (eq.TryGetScore(new SkillJob(activeSkill, job), out var result2) && result2 != 0)
+                    if (eq.TryGetScore(new SkillJob(activeSkill, job), out var result) && result != 0)
                     {
                         cachedToolsByJobs[job] = toolUsed = eq;
                     }

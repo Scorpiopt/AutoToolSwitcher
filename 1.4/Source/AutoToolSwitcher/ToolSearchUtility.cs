@@ -28,7 +28,7 @@ namespace AutoToolSwitcher
         EquipFromInventory,
         GoAndEquipTool
     }
-
+    [HotSwappable]
     [StaticConstructorOnStartup]
     public static class ToolSearchUtility
     {
@@ -151,7 +151,8 @@ namespace AutoToolSwitcher
             {
                 foreach (var tool in pawn.Map.listerThings.ThingsOfDef(def))
                 {
-                    if (pawn.equipment.Primary?.def != tool.def && !pawn.inventory.innerContainer.Any(x => x.def == tool.def) && validator(pawn, tool))
+                    if (pawn.equipment.Primary?.def != tool.def && !pawn.inventory.innerContainer.Any(x => x.def == tool.def)
+                        && validator(pawn, tool))
                     {
                         outsideThings.Add(tool as ThingWithComps);
                     }
@@ -242,15 +243,16 @@ namespace AutoToolSwitcher
             }
             return toolsByScores;
         }
-        public static bool TryGetScore(this ThingWithComps thing, SkillJob skillJob, out float result)
+
+        public static bool TryGetScore(this ThingWithComps tool, SkillJob skillJob, out float result)
         {
             bool isUseful = false;
             result = 0;
             if (skillJob.skill != null)
             {
-                if (thing.def.equippedStatOffsets != null)
+                if (tool.def.equippedStatOffsets != null)
                 {
-                    foreach (var stat in thing.def.equippedStatOffsets)
+                    foreach (var stat in tool.def.equippedStatOffsets)
                     {
                         if (stat.AffectsSkill(skillJob.skill))
                         {
@@ -265,7 +267,7 @@ namespace AutoToolSwitcher
             }
             if (skillJob.job != null) // maybe we should add scores for tools here
             {
-                if (skillJob.job.def == ATS_DefOf.ATS_BeatFireAdv && fireExtinguishers.Contains(thing.def))
+                if (skillJob.job.def == ATS_DefOf.ATS_BeatFireAdv && fireExtinguishers.Contains(tool.def))
                 {
                     result += 1f;
                     isUseful = true;
@@ -273,9 +275,9 @@ namespace AutoToolSwitcher
 
                 if (skillJob.job.bill?.recipe?.workSpeedStat != null)
                 {
-                    if (thing.def.equippedStatOffsets != null)
+                    if (tool.def.equippedStatOffsets != null)
                     {
-                        foreach (var stat in thing.def.equippedStatOffsets)
+                        foreach (var stat in tool.def.equippedStatOffsets)
                         {
                             if (stat.stat == skillJob.job.bill.recipe.workSpeedStat)
                             {
@@ -289,13 +291,12 @@ namespace AutoToolSwitcher
                     }
                 }
             }
-
             if (ModCompatUtility.survivalToolsLoaded)
             {
-                var score = ModCompatUtility.GetScoreFromSurvivalTool(thing, skillJob, ref isUseful);
-                if (score != 0)
+                var score = ModCompatUtility.GetScoreFromSurvivalTool(tool, skillJob, ref isUseful);
+                if (score > 1)
                 {
-                    result *= score;
+                    result += score;
                 }
             }
             return isUseful;
@@ -330,9 +331,7 @@ namespace AutoToolSwitcher
 
         public static SkillDef GetActiveSkill(this Job job, Pawn pawn)
         {
-            var driver = pawn.jobs.curDriver;
-            var toils = Traverse.Create(driver).Field("toils").GetValue<List<Toil>>();
-            return GetActiveSkill(job, toils);
+            return GetActiveSkill(job, pawn.jobs.curDriver.toils);
         }
 
         public static SkillDef GetActiveSkill(Job job, List<Toil> toils)

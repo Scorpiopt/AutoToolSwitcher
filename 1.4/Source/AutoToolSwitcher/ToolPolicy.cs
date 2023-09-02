@@ -25,7 +25,7 @@ namespace AutoToolSwitcher
         public CombatMode combatMode = CombatMode.Range;
 
         public bool toggleEquipSound = true;
-        public bool toggleAutoMelee = true;
+        public bool toggleAutoMelee = false;
         public QualityCategory minQuality = QualityCategory.Awful;
         public ToolPolicyEntry this[int index]
         {
@@ -87,14 +87,24 @@ namespace AutoToolSwitcher
             int i;
             for (i = 0; i < thingDefs.Count; i++)
             {
-                if ((thingDefs[i].IsWeapon || thingDefs[i].IsTool()) && (overwriteExisting || !entriesInt.Any((ToolPolicyEntry x) => x.tool == thingDefs[i])))
+                if (thingDefs[i].IsWeapon || thingDefs[i].IsTool())
                 {
-                    ToolPolicyEntry toolPolicyEntry = new ToolPolicyEntry();
-                    toolPolicyEntry.tool = thingDefs[i];
-                    entriesInt.Add(toolPolicyEntry);
+                    bool missing = !entriesInt.Any((ToolPolicyEntry x) => x.tool == thingDefs[i]);
+                    if (overwriteExisting || missing)
+                    {
+                        ToolPolicyEntry toolPolicyEntry = new ToolPolicyEntry();
+                        toolPolicyEntry.tool = thingDefs[i];
+                        if (missing && (this.sourceDef == ATS_DefOf.ATS_Unrestricted 
+                            || this.label == ATS_DefOf.ATS_Unrestricted.LabelCap))
+                        {
+                            toolPolicyEntry.MakeUnrestrictedDefault();
+                        }
+                        entriesInt.RemoveAll(x => x.tool == thingDefs[i]);
+                        entriesInt.Add(toolPolicyEntry);
+                    }
                 }
+                entriesInt.SortBy((ToolPolicyEntry e) => e.tool.label);
             }
-            entriesInt.SortBy((ToolPolicyEntry e) => e.tool.label);
         }
 
         public void ExposeData()
@@ -105,7 +115,7 @@ namespace AutoToolSwitcher
             Scribe_Defs.Look(ref sourceDef, "sourceDef");
             Scribe_Values.Look(ref combatMode, "combatMode", CombatMode.Range);
             Scribe_Values.Look(ref toggleEquipSound, "toggleEquipSound", true);
-            Scribe_Values.Look(ref toggleAutoMelee, "toggleAutoMelee", true);
+            Scribe_Values.Look(ref toggleAutoMelee, "toggleAutoMelee", false);
             Scribe_Values.Look(ref minQuality, "minQuality");
             if (Scribe.mode == LoadSaveMode.PostLoadInit && entriesInt != null)
             {

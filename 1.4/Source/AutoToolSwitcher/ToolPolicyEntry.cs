@@ -17,7 +17,18 @@ namespace AutoToolSwitcher
 			equipAsWeapon = other.equipAsWeapon;
 			takeAsSecondary = other.takeAsSecondary;
 		}
-		public void ExposeData()
+
+        public void MakeUnrestrictedDefault()
+        {
+            this.equipAsWeapon = true;
+            this.takeAsSecondary = true;
+            if (this.tool.IsTool())
+            {
+                this.takeAsTool = true;
+            }
+        }
+
+        public void ExposeData()
 		{
 			Scribe_Defs.Look(ref tool, "tool");
 			Scribe_Values.Look(ref takeAsTool, "takeAsTool");

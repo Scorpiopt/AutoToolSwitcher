@@ -107,7 +107,7 @@ namespace AutoToolSwitcher
         }
         public static float GetScoreFromSurvivalTool(Thing tool, SkillJob skillJob, ref bool isUseful)
         {
-            float result = 0f;
+            float result = 1f;
             if (tool is SurvivalTools.SurvivalTool survivalTool)
             {
                 foreach (var statFactor in survivalTool.WorkStatFactors)
@@ -120,10 +120,10 @@ namespace AutoToolSwitcher
                             {
                                 isUseful = true;
                             }
-                            result += statFactor.value;
+                            result *= statFactor.value;
                         }
                     }
-                    if (skillJob.job != null) // maybe we should add scores for tools here
+                    if (skillJob.job != null)
                     {
                         if (skillJob.job.bill?.recipe?.workSpeedStat != null)
                         {
@@ -133,7 +133,7 @@ namespace AutoToolSwitcher
                                 {
                                     isUseful = true;
                                 }
-                                result += statFactor.value;
+                                result *= statFactor.value;
                             }
                         }
                     }

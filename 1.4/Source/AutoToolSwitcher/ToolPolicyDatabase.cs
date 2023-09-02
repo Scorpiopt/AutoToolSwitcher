@@ -73,20 +73,15 @@ namespace AutoToolSwitcher
 		public ToolPolicy NewToolPolicyFromDef(ToolPolicyDef def)
 		{
 			ToolPolicy toolPolicy = MakeNewToolPolicy();
+			toolPolicy.sourceDef = def;
 			toolPolicy.label = def.LabelCap;
 			if (def == ATS_DefOf.ATS_Unrestricted)
 			{
 				for (var i = 0; i < toolPolicy.Count; i++)
                 {
-					var toolPolicyEntry = toolPolicy[i];
-					toolPolicyEntry.equipAsWeapon = true;
-					toolPolicyEntry.takeAsSecondary = true;
-					if (toolPolicyEntry.tool.IsTool())
-					{
-						toolPolicyEntry.takeAsTool = true;
-					}
-				}
-			}
+                    toolPolicy[i].MakeUnrestrictedDefault();
+                }
+            }
 
 			if (def.entries != null)
 			{
@@ -98,7 +93,7 @@ namespace AutoToolSwitcher
 			return toolPolicy;
 		}
 
-		private void GenerateStartingToolPolicies()
+        private void GenerateStartingToolPolicies()
 		{
 			foreach (ToolPolicyDef allDef in DefDatabase<ToolPolicyDef>.AllDefs)
 			{
