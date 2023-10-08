@@ -340,7 +340,7 @@ namespace AutoToolSwitcher
             try
             {
                 var pawn = __instance.pawn;
-                if (!ignoredJobs.Contains(__instance.job.def) && (pawn?.RaceProps?.Humanlike ?? false))
+                if (pawn != null && pawn.RaceProps.Humanlike && __instance.job != null && !ignoredJobs.Contains(__instance.job.def))
                 {
                     var list = __result.ToList();
                     var skill = ToolSearchUtility.GetActiveSkill(pawn.CurJob, list);
@@ -385,60 +385,6 @@ namespace AutoToolSwitcher
                             }
                         }
                     }
-                    //else if (Scribe.mode == LoadSaveMode.PostLoadInit && Current.ProgramState == ProgramState.MapInitializing)
-                    //// if a save was reloaded, pawn map will be null when setting up jobdriver. in this case we insert tool finder inside actions.
-                    //// And we can't use job target fields because they might be filled
-                    //{
-                    //    //Toil goToTool = new Toil();
-                    //    //goToTool.initAction = delegate
-                    //    //{
-                    //    //    ToolAction toolAction;
-                    //    //    var tool = skill != null ? ToolSearchUtility.FindToolFor(pawn, skill, out toolAction) : ToolSearchUtility.FindToolFor(pawn, pawn.CurJob, out toolAction);
-                    //    //    cachedToolsByJobs[pawn.CurJob] = tool; // we do that so we retrieve this tool later rather than finding it again
-                    //    //    if (tool != null)
-                    //    //    {
-                    //    //        if (toolAction == ToolAction.GoAndEquipTool)
-                    //    //        {
-                    //    //            if (!pawn.Reserve(tool, pawn.CurJob, 1, 1))
-                    //    //            {
-                    //    //                pawn.jobs.EndCurrentJob(JobCondition.Incompletable);
-                    //    //            }
-                    //    //            else
-                    //    //            {
-                    //    //                pawn.pather.StartPath(tool, PathEndMode.OnCell);
-                    //    //            }
-                    //    //        }
-                    //    //    }
-                    //    //};
-                    //    //goToTool.defaultCompleteMode = ToilCompleteMode.Instant;
-                    //    //goToTool.AddEndCondition(delegate
-                    //    //{
-                    //    //    if (!cachedToolsByJobs.TryGetValue(pawn.CurJob, out var tool))
-                    //    //    {
-                    //    //        ToolAction toolAction;
-                    //    //        tool = skill != null ? ToolSearchUtility.FindToolFor(pawn, skill, out toolAction) : ToolSearchUtility.FindToolFor(pawn, pawn.CurJob, out toolAction);
-                    //    //        cachedToolsByJobs[pawn.CurJob] = tool;
-                    //    //    }
-                    //    //    return tool != null && tool.Spawned && tool.Map == pawn.Map ? JobCondition.Ongoing : JobCondition.Incompletable;
-                    //    //});
-                    //    //Toil equipTool = new Toil();
-                    //    //equipTool.initAction = delegate
-                    //    //{
-                    //    //    if (!cachedToolsByJobs.TryGetValue(pawn.CurJob, out var tool))
-                    //    //    {
-                    //    //        ToolAction toolAction;
-                    //    //        tool = skill != null ? ToolSearchUtility.FindToolFor(pawn, skill, out toolAction) : ToolSearchUtility.FindToolFor(pawn, pawn.CurJob, out toolAction);
-                    //    //        cachedToolsByJobs[pawn.CurJob] = tool;
-                    //    //    }
-                    //    //    if (tool != null)
-                    //    //    {
-                    //    //        EquipTool(pawn, tool);
-                    //    //    }
-                    //    //};
-                    //    //equipTool.defaultCompleteMode = ToilCompleteMode.Instant;
-                    //    list.Insert(0, new Toil());
-                    //    list.Insert(1, new Toil());
-                    //}
                     __result = list;
                 }
             }

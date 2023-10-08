@@ -67,15 +67,19 @@ namespace AutoToolSwitcher
                 return false;
             }
             var policy = p.GetCurrentToolPolicy();
-            if (!policy[x.def].takeAsTool)
+            if (policy != null)
             {
-                return false;
+                if (!policy[x.def].takeAsTool)
+                {
+                    return false;
+                }
+                if (!baseEquipmentValidator(p, x, policy))
+                {
+                    return false;
+                }
+                return true;
             }
-            if (!baseEquipmentValidator(p, x, policy))
-            {
-                return false;
-            }
-            return true;
+            return false;
         };
 
         private static Func<Pawn, Thing, bool> fireExtinguisherValidator = delegate (Pawn p, Thing x)
@@ -85,15 +89,19 @@ namespace AutoToolSwitcher
                 return false;
             }
             var policy = p.GetCurrentToolPolicy();
-            if (!policy[x.def].takeAsTool)
+            if (policy != null)
             {
-                return false;
+                if (!policy[x.def].takeAsTool)
+                {
+                    return false;
+                }
+                if (!baseEquipmentValidator(p, x, policy))
+                {
+                    return false;
+                }
+                return true;
             }
-            if (!baseEquipmentValidator(p, x, policy))
-            {
-                return false;
-            }
-            return true;
+            return false;
         };
 
         static ToolSearchUtility()
