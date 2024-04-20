@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <JobDef>
+    <defName>ATS_BeatFireAdv</defName>
+    <driverClass>AutoToolSwitcher.JobDriver_BeatFireAdv</driverClass>
+    <reportString>beating fire out.</reportString>
+    <neverShowWeapon>true</neverShowWeapon>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+
+</Defs>
