@@ -37,6 +37,10 @@ namespace AutoToolSwitcher
         public static HashSet<string> fireExtinguisherDefnames = new HashSet<string>()
         {
             "VWE_Gun_FireExtinguisher",
+            "Mosi_FirefoamLauncher",
+            "Mosi_GrenadeFirefoam",
+            "Mosi_FirefoamSprayer"
+
         };
         public static HashSet<ThingDef> fireExtinguishers = new HashSet<ThingDef>();
 
