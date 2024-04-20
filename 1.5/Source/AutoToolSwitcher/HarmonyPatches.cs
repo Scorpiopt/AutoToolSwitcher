@@ -120,7 +120,7 @@ namespace AutoToolSwitcher
             }
         }
 
-        [HarmonyPatch(typeof(PawnRenderer), "DrawEquipment")]
+        [HarmonyPatch(typeof(PawnRenderUtility), nameof(PawnRenderUtility.DrawEquipmentAndApparelExtras))]
         public static class Patch_DrawEquipment
         {
             public struct Values
@@ -135,10 +135,10 @@ namespace AutoToolSwitcher
             {
                 Prefix(__2);
             }
-            private static void Prefix(Pawn ___pawn)
+            private static void Prefix(Pawn pawn)
             {
-                var job = ___pawn.CurJob;
-                if (job != null && ___pawn.IsUsingTool())
+                var job = pawn.CurJob;
+                if (job != null && pawn.IsUsingTool())
                 {
                     __state = new Values
                     {
