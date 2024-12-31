@@ -11,6 +11,19 @@ using Verse.Sound;
 
 namespace AutoToolSwitcher
 {
+	[HarmonyPatch(typeof(WorkGiver_HunterHunt), "HasHuntingWeapon")]
+	public static class WorkGiver_HunterHunt_HasHuntingWeapon_Patch
+	{
+		public static void Postfix(ref bool __result, Pawn p)
+		{
+			if (__result is false && ToolSearchUtility.FindToolFor(p, JobMaker.MakeJob(JobDefOf.Hunt, p),
+			 SkillDefOf.Animals, out _) is not null)
+			{
+				__result = true;
+			}
+		}
+	}
+
 	[HotSwappable]
 	[StaticConstructorOnStartup]
 	public static class ToolSearchUtility
@@ -25,7 +38,7 @@ namespace AutoToolSwitcher
 		};
 		
 		public static HashSet<ThingDef> fireExtinguishers = new HashSet<ThingDef>();
-
+		private static HashSet<ThingDef> huntingWeapons = new HashSet<ThingDef>();
 		public static bool IsTool(this ThingDef thingDef)
 		{
 			return toolDefs.Contains(thingDef) || fireExtinguishers.Contains(thingDef);
@@ -66,6 +79,11 @@ namespace AutoToolSwitcher
 				return true;
 			}
 			return false;
+		};
+
+		private static Func<Pawn, Thing, bool> huntingWeaponsValidator = delegate (Pawn p, Thing x)
+		{
+			return x.def.IsRangedWeapon;
 		};
 
 		private static Func<Pawn, Thing, bool> fireExtinguisherValidator = delegate (Pawn p, Thing x)
@@ -109,7 +127,7 @@ namespace AutoToolSwitcher
 
 			foreach (var thingDef in DefDatabase<ThingDef>.AllDefs)
 			{
-				if (thingDef?.equippedStatOffsets?.Any(x => x?.value > 0
+				if (thingDef.equippedStatOffsets?.Any(x => x?.value > 0
 					&& workRelatedStats.Contains(x.stat)) ?? false && thingDef.comps != null)
 				{
 					foreach (var comp in thingDef.comps)
@@ -124,6 +142,11 @@ namespace AutoToolSwitcher
 							Log.Error(comp + " has a missing comp class. It will lead to bugs.");
 						}
 					}
+				}
+				
+				if (thingDef.IsRangedWeapon && thingDef.Verbs.Any(x => typeof(Verb_LaunchProjectile).IsAssignableFrom(x.verbClass) && x.range > 5))
+				{
+					huntingWeapons.Add(thingDef);
 				}
 
 				if (ModCompatUtility.survivalToolsLoaded && thingDef.IsSurvivalTool())
@@ -143,7 +166,11 @@ namespace AutoToolSwitcher
 
 		public static ThingWithComps FindToolFor(Pawn pawn, Job job, SkillDef skillDef, out ToolAction toolAction)
 		{
-			if (job.def == ATS_DefOf.ATS_BeatFireAdv)
+			if (job.def == JobDefOf.Hunt)
+			{
+				return FindToolForInt(pawn, new SkillJob(skillDef, job), huntingWeaponsValidator, huntingWeapons, out toolAction);
+			}
+			else if (job.def == ATS_DefOf.ATS_BeatFireAdv)
 			{
 				return FindToolForInt(pawn, new SkillJob(skillDef, job), fireExtinguisherValidator, fireExtinguishers, out toolAction);
 			}
@@ -350,6 +377,7 @@ namespace AutoToolSwitcher
 		}
 
 		public static Dictionary<(StatDef stat, SkillDef skill), bool> affectedStats = new();
+
 		public static bool AffectsSkill(this StatDef stat, SkillDef skill)
 		{
 			var key = (stat, skill);
@@ -384,8 +412,6 @@ namespace AutoToolSwitcher
 				}
 			}
 
-			Log.Message("Stat: " + stat + " does not affect skill: " + skill);
-			Log.ResetMessageCount();
 			return false;
 		}
 
