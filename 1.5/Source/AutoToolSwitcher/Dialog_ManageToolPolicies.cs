@@ -137,28 +137,12 @@ namespace AutoToolSwitcher
 			float x = (inRect.width / 2f) - (CloseButSize.x / 2f);
 			float y = inRect.height - 50f;
 
-			if (Widgets.ButtonText(new Rect(x - CloseButSize.x - 10, y, CloseButSize.x, CloseButSize.y), "ATS.ForceRefresh".Translate()))
-			{
-				foreach (var kvp in GameComponent_ToolTracker.Instance.trackers)
-				{
-					var pawn = kvp.Key;
-					var tracker = kvp.Value;
-					if (SelectedPolicy != null && tracker?.CurrentPolicy == SelectedPolicy && pawn.IsColonistPlayerControlled && pawn.Spawned)
-					{
-						var job = WeaponSearchUtility.SearchForWeapon(pawn);
-						//Log.Message("Checking: " + pawn + " - " + SelectedPolicy + " job: " + job);
-						if (job != null)
-						{
-							pawn.jobs.TryTakeOrderedJob(job);
-						}
-					}
-				}
-			}
 			if (Widgets.ButtonText(new Rect(x, y, CloseButSize.x, CloseButSize.y), "CloseButton".Translate()))
 			{
 				Close();
 			}
 		}
+		
 		private void DoTogglesAndSliders(Rect rect)
 		{
 			if (SelectedPolicy != null)
@@ -167,12 +151,6 @@ namespace AutoToolSwitcher
 				Widgets.CheckboxLabeled(toggleEquipSoundRect, "ATS.ToggleEquipSound".Translate(), ref SelectedPolicy.toggleEquipSound);
 				var toggleAutoMeleeRect = new Rect(toggleEquipSoundRect.x, toggleEquipSoundRect.yMax, toggleEquipSoundRect.width, toggleEquipSoundRect.height);
 				Widgets.CheckboxLabeled(toggleAutoMeleeRect, "ATS.ToggleAutoMelee".Translate(), ref SelectedPolicy.toggleAutoMelee);
-
-				var minQualitySliderLabel = new Rect(toggleEquipSoundRect.xMax + 300, toggleEquipSoundRect.y, 180, 50);
-				Widgets.Label(minQualitySliderLabel, "ATS.MinQualityForWeaponsTools".Translate());
-				var minQualitySliderRect = new Rect(minQualitySliderLabel.xMax, minQualitySliderLabel.y, 150, 25);
-				SelectedPolicy.minQuality = (QualityCategory)Widgets.HorizontalSlider(minQualitySliderRect, (float)SelectedPolicy.minQuality, 0,
-					(float)QualityCategory.Legendary, true, SelectedPolicy.minQuality.GetLabel());
 			}
 		}
 		public override void PreClose()
@@ -311,117 +289,24 @@ namespace AutoToolSwitcher
 			Text.Anchor = prevAnchor;
 
 
-			x += test;
-			var rect5 = new Rect(x, rect.y, takeToInventoryWidth, 50);
-			Widgets.Label(rect5, "ATS.Equip".Translate());
-			TooltipHandler.TipRegionByKey(rect5, "ATS.EquipDesc");
-
-			Text.Anchor = TextAnchor.MiddleLeft;
-			var selectAllEquipWeaponToggleRect = new Rect(rect5.x + 20, rect5.yMax - 28, 54, 25);
-			bool? selectedEquipWeaponAll = null;
-			if (SelectedPolicy.entriesInt.TrueForAll(opt => opt.equipAsWeapon))
-			{
-				selectedEquipWeaponAll = true;
-			}
-			else if (SelectedPolicy.entriesInt.TrueForAll(opt => !opt.equipAsWeapon))
-			{
-				selectedEquipWeaponAll = false;
-			}
-
-			if (selectedEquipWeaponAll != null)
-			{
-				bool value = selectedEquipWeaponAll.Value;
-				Widgets.CheckboxLabeled(selectAllEquipWeaponToggleRect, "ATS.SelectAll".Translate(), ref value);
-				if (value != selectedEquipWeaponAll.Value)
-				{
-					SelectedPolicy.entriesInt.ForEach(opt => opt.equipAsWeapon = value);
-				}
-			}
-			else
-			{
-				var labelRect = selectAllEquipWeaponToggleRect;
-				labelRect.width -= 24;
-				var checkBoxRect = selectAllEquipWeaponToggleRect;
-				checkBoxRect.x = labelRect.xMax;
-				checkBoxRect.width = 24;
-
-				Widgets.Label(labelRect, "ATS.SelectAll".Translate());
-				var state = Widgets.CheckboxMulti(checkBoxRect, MultiCheckboxState.Partial);
-				if (state == MultiCheckboxState.On)
-				{
-					SelectedPolicy.entriesInt.ForEach(opt => opt.equipAsWeapon = true);
-				}
-				else if (state == MultiCheckboxState.Off)
-				{
-					SelectedPolicy.entriesInt.ForEach(opt => opt.equipAsWeapon = false);
-				}
-			}
-
-			Text.Anchor = prevAnchor;
-
-			x += test2;
-			var rect6 = new Rect(x, rect.y, takeToInventoryWidth, 50);
-			Widgets.Label(rect6, "ATS.EquipAsSecondaryWeapon".Translate());
-			TooltipHandler.TipRegionByKey(rect6, "ATS.EquipAsSecondaryWeaponDesc");
-
-			Text.Anchor = TextAnchor.MiddleLeft;
-			var selectAllSecondaryToggleRect = new Rect(rect6.x + 20, rect6.yMax - 28, 54, 25);
-			bool? selectedSecondaryAll = null;
-			if (SelectedPolicy.entriesInt.TrueForAll(opt => opt.takeAsSecondary))
-			{
-				selectedSecondaryAll = true;
-			}
-			else if (SelectedPolicy.entriesInt.TrueForAll(opt => !opt.takeAsSecondary))
-			{
-				selectedSecondaryAll = false;
-			}
-
-			if (selectedSecondaryAll != null)
-			{
-				bool value = selectedSecondaryAll.Value;
-				Widgets.CheckboxLabeled(selectAllSecondaryToggleRect, "ATS.SelectAll".Translate(), ref value);
-				if (value != selectedSecondaryAll.Value)
-				{
-					SelectedPolicy.entriesInt.ForEach(opt => opt.takeAsSecondary = value);
-				}
-			}
-			else
-			{
-				var labelRect = selectAllSecondaryToggleRect;
-				labelRect.width -= 24;
-				var checkBoxRect = selectAllSecondaryToggleRect;
-				checkBoxRect.x = labelRect.xMax;
-				checkBoxRect.width = 24;
-
-				Widgets.Label(labelRect, "ATS.SelectAll".Translate());
-				var state = Widgets.CheckboxMulti(checkBoxRect, MultiCheckboxState.Partial);
-				if (state == MultiCheckboxState.On)
-				{
-					SelectedPolicy.entriesInt.ForEach(opt => opt.takeAsSecondary = true);
-				}
-				else if (state == MultiCheckboxState.Off)
-				{
-					SelectedPolicy.entriesInt.ForEach(opt => opt.takeAsSecondary = false);
-				}
-			}
 
 			Text.Anchor = prevAnchor;
 
 
 			var selectedPolicy = SelectedPolicy;
-			var firstWeaponType = new Rect(rect6.xMax + 10, rect6.y, 120, 30);
+			var firstWeaponType = new Rect(rect.xMax + 10, rect.y, 120, 30);
 			Text.Anchor = TextAnchor.MiddleCenter;
 			Widgets.Label(firstWeaponType, "ATS.FirstCombatWeaponChoice".Translate());
 			Text.Anchor = TextAnchor.UpperLeft;
-			if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax, rect6.y, 75f, 30f), "ATS.Range".Translate(), selectedPolicy.combatMode == CombatMode.Range))
+			if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax, rect.y, 75f, 30f), "ATS.Range".Translate(), selectedPolicy.combatMode == CombatMode.Range))
 			{
 				selectedPolicy.combatMode = CombatMode.Range;
 			}
-			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 90f, rect6.y, 75f, 30f), "ATS.Melee".Translate(), selectedPolicy.combatMode == CombatMode.Melee))
+			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 90f, rect.y, 75f, 30f), "ATS.Melee".Translate(), selectedPolicy.combatMode == CombatMode.Melee))
 			{
 				selectedPolicy.combatMode = CombatMode.Melee;
 			}
-			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 180f, rect6.y, 75f, 30f), "ATS.None".Translate(), selectedPolicy.combatMode == CombatMode.None))
+			else if (Widgets.RadioButtonLabeled(new Rect(firstWeaponType.xMax + 180f, rect.y, 75f, 30f), "ATS.None".Translate(), selectedPolicy.combatMode == CombatMode.None))
 			{
 				selectedPolicy.combatMode = CombatMode.None;
 			}
@@ -442,14 +327,6 @@ namespace AutoToolSwitcher
 			x += toolNameWidth + toolIconWidth + test3;
 			Widgets.Checkbox(x, rect.y, ref entry.takeAsTool, 24f, paintable: true);
 			TooltipHandler.TipRegion(new Rect(x, rect.y, 24, 24), "ATS.TakeAsToolDesc".Translate());
-
-			x += test;
-			Widgets.Checkbox(x, rect.y, ref entry.equipAsWeapon, 24f, paintable: true);
-			TooltipHandler.TipRegion(new Rect(x, rect.y, 24, 24), "ATS.EquipDesc".Translate());
-
-			x += test2;
-			Widgets.Checkbox(x, rect.y, ref entry.takeAsSecondary, 24f, paintable: true);
-			TooltipHandler.TipRegion(new Rect(x, rect.y, 24, 24), "ATS.EquipAsSecondaryWeaponDesc".Translate());
 
 			Text.Anchor = TextAnchor.UpperLeft;
 		}

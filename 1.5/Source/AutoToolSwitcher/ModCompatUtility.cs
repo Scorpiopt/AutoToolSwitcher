@@ -114,7 +114,7 @@ namespace AutoToolSwitcher
                 {
                     if (skillJob.skill != null)
                     {
-                        if (statFactor.AffectsSkill(skillJob.skill))
+                        if (statFactor.stat.AffectsSkill(skillJob.skill))
                         {
                             if (statFactor.value > 0)
                             {
