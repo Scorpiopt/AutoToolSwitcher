@@ -265,7 +265,7 @@ namespace AutoToolSwitcher
 			{
 				if (tool.def.IsRangedWeapon)
 				{
-					result += 1f;
+					result += tool.def.verbs.Max(x => x.range);
 					isUseful = true;
 				}
 				return isUseful;
