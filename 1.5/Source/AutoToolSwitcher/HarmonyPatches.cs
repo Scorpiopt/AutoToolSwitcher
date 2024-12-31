@@ -171,58 +171,6 @@ namespace AutoToolSwitcher
 			}
 		}
 
-		[HarmonyPatch(typeof(Pawn_MeleeVerbs), "TryMeleeAttack")]
-		public static class Patch_TryMeleeAttackVerb
-		{
-			public static Func<Pawn, ThingWithComps, bool> meleeValidator = delegate (Pawn pawn, ThingWithComps t)
-			{
-				if (!t.def.IsWeapon)
-				{
-					return false;
-				}
-				if (t.def.IsRangedWeapon)
-				{
-					return false;
-				}
-				if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
-				{
-					return false;
-				}
-				if (t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
-				{
-					return false;
-				}
-
-				return true;
-			};
-
-			public static Func<Pawn, ThingWithComps, bool> rangeValidator = delegate (Pawn pawn, ThingWithComps t)
-			{
-				if (!t.def.IsWeapon)
-				{
-					return false;
-				}
-				if (!t.def.IsRangedWeapon)
-				{
-					return false;
-				}
-				if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
-				{
-					return false;
-				}
-				if (t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
-				{
-					return false;
-				}
-				if (ModCompatUtility.combatExtendedLoaded && !ModCompatUtility.IsUsableForCE(pawn, t))
-				{
-					return false;
-				}
-				return true;
-			};
-		}
-
-
 		[HarmonyPatch(typeof(PawnComponentsUtility), "AddAndRemoveDynamicComponents")]
 		public static class Patch_AddAndRemoveDynamicComponents
 		{
@@ -370,6 +318,91 @@ namespace AutoToolSwitcher
 				return toolUsed == pawn.equipment.Primary;
 			}
 			return false;
+		}
+
+
+		[HarmonyPatch(typeof(Pawn), "TryGetAttackVerb")]
+		public static class Patch_TryGetAttackVerb
+		{
+			public static void Prefix(Pawn __instance, Thing target, bool allowManualCastWeapons = false)
+			{
+				Patch_TryMeleeAttackVerb.TrySwitchWeapon(__instance, target);
+			}
+		}
+
+		[HarmonyPatch(typeof(Pawn_MeleeVerbs), "TryMeleeAttack")]
+		public static class Patch_TryMeleeAttackVerb
+		{
+			public static Func<Pawn, ThingWithComps, bool> meleeValidator = delegate (Pawn pawn, ThingWithComps t)
+			{
+				if (!t.def.IsWeapon)
+				{
+					return false;
+				}
+				if (t.def.IsRangedWeapon)
+				{
+					return false;
+				}
+				if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
+				{
+					return false;
+				}
+				if (t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
+				{
+					return false;
+				}
+
+				return true;
+			};
+
+			public static Func<Pawn, ThingWithComps, bool> rangeValidator = delegate (Pawn pawn, ThingWithComps t)
+			{
+				if (!t.def.IsWeapon)
+				{
+					return false;
+				}
+				if (!t.def.IsRangedWeapon)
+				{
+					return false;
+				}
+				if (t.def.weaponTags != null && t.def.weaponTags.Where(x => x.ToLower().Contains("grenade")).Any())
+				{
+					return false;
+				}
+				if (t.def.Verbs.Where(x => x.verbClass == typeof(Verb_ShootOneUse)).Any())
+				{
+					return false;
+				}
+				if (ModCompatUtility.combatExtendedLoaded && !ModCompatUtility.IsUsableForCE(pawn, t))
+				{
+					return false;
+				}
+				return true;
+			};
+			public static void Prefix(Pawn_MeleeVerbs __instance, Thing target)
+			{
+				TrySwitchWeapon(__instance.Pawn, target);
+			}
+
+			public static void TrySwitchWeapon(Pawn pawn, Thing target)
+			{
+				if (target != null && target.Position.DistanceTo(pawn.Position) <= 1.42f)
+				{
+					var toolPolicy = pawn.GetCurrentToolPolicy();
+					if (toolPolicy != null && !toolPolicy.toggleAutoMelee)
+					{
+						return;
+					}
+					if ((pawn.equipment?.Primary?.def.IsRangedWeapon ?? false))
+					{
+						var meleeWeapon = WeaponSearchUtility.PickBestWeapon(pawn, meleeValidator);
+						if (meleeWeapon != null)
+						{
+							EquipTool(pawn, meleeWeapon);
+						}
+					}
+				}
+			}
 		}
 	}
 }
