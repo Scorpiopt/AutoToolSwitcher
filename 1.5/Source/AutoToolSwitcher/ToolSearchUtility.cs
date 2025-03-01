@@ -121,6 +121,13 @@ namespace AutoToolSwitcher
 					}
 				}
 			}
+			foreach (var recipeDef in DefDatabase<RecipeDef>.AllDefs)
+            {
+                if (recipeDef.workSpeedStat != null)
+                {
+                    workRelatedStats.Add(recipeDef.workSpeedStat);
+                }
+            }
 			
 			workRelatedStats.Add(StatDefOf.CleaningSpeed);
 			jobRelatedStats[JobDefOf.Clean] = new List<StatDef>() { StatDefOf.CleaningSpeed };
