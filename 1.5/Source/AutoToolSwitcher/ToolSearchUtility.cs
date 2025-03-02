@@ -128,8 +128,20 @@ namespace AutoToolSwitcher
                     workRelatedStats.Add(recipeDef.workSpeedStat);
                 }
             }
-			
-			workRelatedStats.Add(StatDefOf.CleaningSpeed);
+
+			foreach (var stat in workRelatedStats.ToList())
+			{
+				if (stat.statFactors != null)
+				{
+					foreach (var factor in stat.statFactors)
+					{
+						workRelatedStats.Add(factor);
+					}
+				}
+			}
+
+
+            workRelatedStats.Add(StatDefOf.CleaningSpeed);
 			jobRelatedStats[JobDefOf.Clean] = new List<StatDef>() { StatDefOf.CleaningSpeed };
 
 			foreach (var thingDef in DefDatabase<ThingDef>.AllDefs)
@@ -338,7 +350,8 @@ namespace AutoToolSwitcher
 					{
 						foreach (var stat in tool.def.equippedStatOffsets)
 						{
-							if (!processedStats.Contains(stat.stat) && stat.stat == skillJob.job.bill.recipe.workSpeedStat)
+							if (!processedStats.Contains(stat.stat) && (stat.stat == skillJob.job.bill.recipe.workSpeedStat 
+								|| skillJob.job.bill.recipe.workSpeedStat.statFactors != null && skillJob.job.bill.recipe.workSpeedStat.statFactors.Contains(stat.stat)))
 							{
 								if (stat.value > 0)
 								{
