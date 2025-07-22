@@ -17,4 +17,11 @@
                 <li IfModActive="erdelf.ExportAgency">1.5/ExportAgency/</li>
                 <li IfModActive="erdelf.ExportAgency_copy">1.5/ExportAgency/</li>
         </v1.5>
+
+<v1.6>
+  <li>/</li>
+  <li>1.6/</li>
+  <li IfModActive="erdelf.ExportAgency">1.6/ExportAgency/</li>
+  <li IfModActive="erdelf.ExportAgency_copy">1.6/ExportAgency/</li>
+</v1.6>
 </loadFolders>
