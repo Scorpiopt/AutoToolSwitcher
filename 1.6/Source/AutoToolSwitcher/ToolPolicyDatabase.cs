@@ -42,7 +42,7 @@ namespace AutoToolSwitcher
 
 		public AcceptanceReport TryDelete(ToolPolicy policy)
 		{
-			foreach (Pawn item in PawnsFinder.AllMapsCaravansAndTravelingTransportPods_Alive_FreeColonists_NoLodgers)
+			foreach (Pawn item in PawnsFinder.AllCaravansAndTravellingTransporters_Alive)
 			{
 				var curToolPolicy = item.GetCurrentToolPolicy();
 				if (curToolPolicy != null && curToolPolicy == policy)

@@ -49,8 +49,8 @@
     <PackageReference Include="Krafs.Publicizer" Version="2.*" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.5.*" />
-    <PackageReference Include="Lib.Harmony" Version="2.3.3">
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4528-beta" />
+    <PackageReference Include="Lib.Harmony" Version="2.3.6">
       <ExcludeAssets>runtime</ExcludeAssets>
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

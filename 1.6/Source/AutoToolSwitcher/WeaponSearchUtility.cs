@@ -209,7 +209,7 @@ namespace AutoToolSwitcher
             {
                 if (droppedThing != null)
                 {
-                    return HaulAIUtility.HaulToStorageJob(pawn, droppedThing);
+                    return HaulAIUtility.HaulToStorageJob(pawn, droppedThing, false);
                 }
             }
             return null;
